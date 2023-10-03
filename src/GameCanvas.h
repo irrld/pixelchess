@@ -71,6 +71,8 @@ private:
   bool wait_turn;
   Ref<ChessConnection> connection;
   Ref<std::thread> thread;
+  std::string next_info_text;
+  bool has_next_text = false;
 
  private:
   void SetInfoText(const std::string& text);

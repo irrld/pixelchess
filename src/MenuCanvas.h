@@ -54,8 +54,8 @@ class JoinTask : public Task {
   std::string host;
   int port;
   gApp* root;
-  Ref<znet::Client> server;
-  Ref<std::thread> thread;
+  Ref<znet::Client> client_;
+  Ref<std::thread> thread_;
   bool completed = false;
   Ref<ChessConnectionNetwork> connection;
 };

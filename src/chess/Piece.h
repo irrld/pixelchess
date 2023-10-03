@@ -6,15 +6,17 @@
 #include "Util.h"
 
 enum PieceType : uint8_t {
+  kPieceTypeNone,
   kPieceTypePawn,
   kPieceTypeKnight,
   kPieceTypeRook,
   kPieceTypeBishop,
   kPieceTypeQueen,
-  kPieceTypeKing
+  kPieceTypeKing,
 };
 
 enum PieceColor : uint8_t {
+  kPieceColorNone,
   kPieceColorWhite,
   kPieceColorBlack
 };

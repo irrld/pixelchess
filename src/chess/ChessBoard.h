@@ -8,7 +8,7 @@
 class ChessBoard {
  public:
   ChessBoard();
-  ChessBoard(PieceData board[8 * 8]);
+  ChessBoard(std::array<PieceData, 8 * 8> board);
   ~ChessBoard();
 
   Ref<Piece> GetPiece(int x, int y);
@@ -20,7 +20,7 @@ class ChessBoard {
     return y * 8 + x;
   }
  private:
-  Ref<Piece> pieces_[6];
+  Ref<Piece> pieces_[7];
   Ref<Piece> board_[8 * 8];
 
   void CreatePieces();

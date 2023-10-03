@@ -25,7 +25,7 @@ HostTask::HostTask(gApp* root) : root(root) {
     }
     title = "Waiting for opponent...";
     connection = CreateRef<ChessConnectionLocal>(server);
-    connection->SetOnClientConnect([this]() {
+    connection->SetOnConnect([this]() {
       completed = true;
     });
     if ((result = server->Listen()) != znet::Result::Success) {
@@ -56,7 +56,19 @@ const std::string& HostTask::GetTitle() {
 }
 
 JoinTask::JoinTask(gApp* root, std::string host, int port) : root(root), host(host), port(port) {
-  title = "Connecting to " + host + ":" + std::to_string(port) + "...";
+  znet::ClientConfig config{host, port};
+  client_ = CreateRef<znet::Client>(config);
+  completed = false;
+  thread_ = CreateRef<std::thread>([host, port, this]() {
+    connection = CreateRef<ChessConnectionNetwork>(client_);
+    connection->SetOnConnect([this]() {
+      title = "Loading the board...";
+      completed = true;
+    });
+    title = "Connecting to " + host + ":" + std::to_string(port) + "...";
+    client_->Bind();
+    client_->Connect();
+  });
 }
 
 JoinTask::~JoinTask() {
@@ -64,7 +76,15 @@ JoinTask::~JoinTask() {
 }
 
 bool JoinTask::Update() {
-    return false;
+  if (completed) {
+    // wait until board data arrives
+    if (!connection->GetBoardData()) {
+      return false;
+    }
+    root->setCurrentCanvas(new GameCanvas(root, connection, thread_));
+    completed = false;
+  }
+  return completed;
 }
 
 Ref<Task> JoinTask::Next() {

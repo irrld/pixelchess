@@ -14,7 +14,7 @@ class UpdateBoardPacket : public znet::Packet {
  public:
   UpdateBoardPacket() : Packet(1) { }
 
-  PieceData* board_;
+  Ref<std::array<PieceData, 8 * 8>> board_;
 };
 
 class MovePacket : public znet::Packet {
@@ -41,6 +41,16 @@ class SetTurnPacket : public znet::Packet {
   PieceColor color_;
 };
 
+class StartGamePacket : public znet::Packet {
+ public:
+  StartGamePacket() : znet::Packet(5) { }
+};
+
+class ClientReadyPacket : public znet::Packet {
+ public:
+  ClientReadyPacket() : znet::Packet(6) { }
+};
+
 class UpdateBoardPacketSerializerV1 : public znet::PacketSerializer<UpdateBoardPacket> {
  public:
   UpdateBoardPacketSerializerV1() : PacketSerializer<UpdateBoardPacket>(1) {}
@@ -48,7 +58,7 @@ class UpdateBoardPacketSerializerV1 : public znet::PacketSerializer<UpdateBoardP
   znet::Ref<znet::Buffer> Serialize(Ref<UpdateBoardPacket> packet, Ref<znet::Buffer> buffer) override {
     // todo bitmap
     for (int i = 0; i < 8 * 8; i++) {
-      auto& data = packet->board_[i];
+      auto& data = packet->board_->at(i);
       buffer->WriteBool(data.exists);
       if (data.exists) {
         buffer->WriteInt((uint8_t)data.type);
@@ -60,8 +70,9 @@ class UpdateBoardPacketSerializerV1 : public znet::PacketSerializer<UpdateBoardP
 
   Ref<UpdateBoardPacket> Deserialize(Ref<znet::Buffer> buffer) override {
     auto packet = CreateRef<UpdateBoardPacket>();
+    packet->board_ = CreateRef<std::array<PieceData, 8 * 8>>();
     for (int i = 0; i < 8 * 8; i++) {
-      auto& data = packet->board_[i];
+      auto& data = packet->board_->at(i);
       data.exists = buffer->ReadBool();
       if (data.exists) {
         data.type = (PieceType) buffer->ReadInt<uint8_t>();
@@ -124,5 +135,31 @@ class SetTurnPacketSerializerV1 : public znet::PacketSerializer<SetTurnPacket> {
     auto packet = CreateRef<SetTurnPacket>();
     packet->color_ = (PieceColor) buffer->ReadInt<uint8_t>();
     return packet;
+  }
+};
+
+class StartGamePacketSerializerV1 : public znet::PacketSerializer<StartGamePacket> {
+ public:
+  StartGamePacketSerializerV1() : PacketSerializer<StartGamePacket>(5) {}
+
+  Ref<znet::Buffer> Serialize(Ref<StartGamePacket> packet, Ref<znet::Buffer> buffer) override {
+    return buffer;
+  }
+
+  Ref<StartGamePacket> Deserialize(Ref<znet::Buffer> buffer) override {
+    return CreateRef<StartGamePacket>();
+  }
+};
+
+class ClientReadyPacketSerializerV1 : public znet::PacketSerializer<ClientReadyPacket> {
+ public:
+  ClientReadyPacketSerializerV1() : PacketSerializer<ClientReadyPacket>(6) {}
+
+  Ref<znet::Buffer> Serialize(Ref<ClientReadyPacket> packet, Ref<znet::Buffer> buffer) override {
+    return buffer;
+  }
+
+  Ref<ClientReadyPacket> Deserialize(Ref<znet::Buffer> buffer) override {
+    return CreateRef<ClientReadyPacket>();
   }
 };

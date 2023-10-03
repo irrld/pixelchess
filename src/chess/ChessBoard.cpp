@@ -20,7 +20,7 @@ ChessBoard::ChessBoard() {
   CreatePieces();
 }
 
-ChessBoard::ChessBoard(PieceData board[8 * 8]) {
+ChessBoard::ChessBoard(std::array<PieceData, 8 * 8> board) {
   CreatePieces();
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {

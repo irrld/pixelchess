@@ -38,25 +38,33 @@ void GameCanvas::setup() {
   fell_anim_dist = 1.0f;
   wait_turn = false;
   appmanager->setTargetFramerate(120);
-  chess_board = new ChessBoard(connection->GetBoardData());
+  chess_board = new ChessBoard(*connection->GetBoardData());
   connection->SetOnMove([this](int x, int y, int to_x, int to_y, PieceType piece_type, bool is_capture) {
     Move(x, y, to_x, to_y);
   });
-  connection->SetOnSetCurrent([this](PieceColor color) {
+  connection->SetOnTurnChange([this](PieceColor color) {
     if (color == player_color) {
-      input_lock = false;
       wait_turn = false;
       SetInfoText("Your turn!");
     } else {
-      input_lock = true;
       wait_turn = true;
       SetInfoText("Opponent's turn!");
     }
   });
+  connection->SetOnStartGame([this]() {
+    input_lock = false;
+  });
+  connection->Ready();
 }
 
 
 void GameCanvas::update() {
+  if (has_next_text) {
+    info_text = next_info_text;
+    info_pos_x = (getWidth() - RenderUtil::GetStringWidth(info_text, true)) / 2;
+    info_pos_y = board_pos_y + board_height + RenderUtil::GetStringHeight(info_text, true) + 20;
+    has_next_text = false;
+  }
   if (!connection->IsOpen()) {
     // todo disconnect screen
     return;
@@ -229,22 +237,25 @@ void GameCanvas::mouseReleased(int x, int y, int button) {
     move_piece_x = hover_piece_x;
     move_piece_y = hover_piece_y;
   } else if (was_show_moves && (piece == nullptr || piece->GetColor() != player_color)) {
+    if (animate || input_lock || wait_turn || !chess_board->IsValidMove(move_piece_x, move_piece_y, hover_piece_x, hover_piece_y)) {
+      show_moves = false;
+      hover_piece_x = -1;
+      hover_piece_y = -1;
+      return;
+    }
+    connection->Move(move_piece_x, move_piece_y, hover_piece_x, hover_piece_y, piece != nullptr ? piece->GetType() : kPieceTypeNone, false);
+    Move(move_piece_x, move_piece_y, hover_piece_x, hover_piece_y);
+    wait_turn = true;
+
     show_moves = false;
     hover_piece_x = -1;
     hover_piece_y = -1;
-    if (animate || input_lock || wait_turn || !chess_board->IsValidMove(move_piece_x, move_piece_y, hover_piece_x, hover_piece_y)) {
-      return;
-    }
-    connection->Move(move_piece_x, move_piece_y, hover_piece_x, hover_piece_y, piece->GetType(), false);
-    Move(move_piece_x, move_piece_y, hover_piece_x, hover_piece_y);
-    wait_turn = true;
   }
 }
 
 void GameCanvas::SetInfoText(const std::string& text) {
-  info_text = text;
-  info_pos_x = (getWidth() - RenderUtil::GetStringWidth(text)) / 2;
-  info_pos_y = board_pos_y + board_height + RenderUtil::GetStringHeight(text) + 20;
+  next_info_text = text;
+  has_next_text = true;
 }
 
 void GameCanvas::mouseScrolled(int x, int y) {
