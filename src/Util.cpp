@@ -35,7 +35,7 @@ void RenderUtil::DrawFont(const std::string& text, int x, int y, const gColor& c
 void RenderUtil::DrawFont(gFont* render_font, const std::string& text, int x, int y, const gColor& color) {
   const gColor& og_color = gRenderObject::getRenderer()->getColor();
   gRenderObject::getRenderer()->setColor({color.r - color.r / 2.0f, color.g - color.g / 2.0f, color.b - color.b / 2.0f, color.a});
-  render_font->drawText(text, x, y + 4);
+  render_font->drawText(text, x, y + render_font->getStringHeight(text) / 6.5f);
   gRenderObject::getRenderer()->setColor(color);
   render_font->drawText(text, x, y);
   gRenderObject::getRenderer()->setColor(og_color);
