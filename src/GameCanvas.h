@@ -35,13 +35,13 @@ public:
   void HighlightPosition(int board_x, int board_y, const gColor& color);
   void Move(int x, int y, int to_x, int to_y);
   void DrawBoard();
+  void DrawPiece(int x, int y);
+  int ConvertY(int y);
 private:
-  static const int kBoardThemes = 5;
   gApp* root;
   gImage cursor;
-  gImage board_textures[kBoardThemes];
+  gImage board_textures[2];
   gImage outliner;
-  int board_theme;
   int board_pos_x, board_pos_y;
   int board_width, board_height;
   gImage white_pieces;
@@ -73,6 +73,7 @@ private:
   Ref<std::thread> thread;
   std::string next_info_text;
   bool has_next_text = false;
+  bool flip_board;
 
  private:
   void SetInfoText(const std::string& text);
