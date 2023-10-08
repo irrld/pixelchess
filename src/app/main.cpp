@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-
+#include "app.h"
 #include "gAppManager.h"
-#include "gApp.h"
-
 
 int main(int argc, char **argv) {
 

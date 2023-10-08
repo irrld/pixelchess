@@ -8,13 +8,14 @@
 #ifndef GCANVAS_H_
 #define GCANVAS_H_
 
-#include <net/ChessConnection.h>
+#include <net/chess_connection.h>
 #include <thread>
-#include "Util.h"
-#include "app/Button.h"
-#include "app/gApp.h"
+#include "app/app.h"
+#include "app/button.h"
+#include "color.h"
 #include "gBaseCanvas.h"
 #include "gImage.h"
+#include "util.h"
 
 class Task {
  public:
@@ -39,6 +40,7 @@ class HostTask : public Task {
   Ref<std::thread> thread;
   bool completed = false;
   Ref<ChessConnectionLocal> connection;
+  bool wait = false;
 };
 
 class JoinTask : public Task {
@@ -58,6 +60,7 @@ class JoinTask : public Task {
   Ref<std::thread> thread_;
   bool completed = false;
   Ref<ChessConnectionNetwork> connection;
+  bool wait = false;
 };
 
 class MenuCanvas : public gBaseCanvas {
@@ -96,6 +99,11 @@ class MenuCanvas : public gBaseCanvas {
   double loading_anim;
   std::string title;
   Ref<Task> task;
+  bool fade_in_;
+  RGB fade_color_;
+  RGB back_color_;
+  RGB clear_color_;
+  double fade_in_timer_;
 };
 
 #endif /* GCANVAS_H_ */

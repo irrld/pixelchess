@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <chess/Piece.h>
+#include <chess/piece.h>
 #include "znet/znet.h"
 
 struct PieceData {
@@ -25,8 +25,6 @@ class MovePacket : public znet::Packet {
   int y_;
   int to_x_;
   int to_y_;
-  PieceType piece_type_;
-  bool is_capture_;
 };
 
 class BoardRequestPacket : public znet::Packet {
@@ -49,6 +47,13 @@ class StartGamePacket : public znet::Packet {
 class ClientReadyPacket : public znet::Packet {
  public:
   ClientReadyPacket() : znet::Packet(6) { }
+};
+
+class EndGamePacket : public znet::Packet {
+ public:
+  EndGamePacket() : znet::Packet(7) { }
+
+  PieceColor winner_;
 };
 
 class UpdateBoardPacketSerializerV1 : public znet::PacketSerializer<UpdateBoardPacket> {
@@ -92,8 +97,6 @@ class MovePacketSerializerV1 : public znet::PacketSerializer<MovePacket> {
     buffer->WriteInt(packet->y_);
     buffer->WriteInt(packet->to_x_);
     buffer->WriteInt(packet->to_y_);
-    buffer->WriteInt((uint8_t) packet->piece_type_);
-    buffer->WriteBool(packet->is_capture_);
     return buffer;
   }
 
@@ -103,8 +106,6 @@ class MovePacketSerializerV1 : public znet::PacketSerializer<MovePacket> {
     packet->y_ = buffer->ReadInt<int>();
     packet->to_x_ = buffer->ReadInt<int>();
     packet->to_y_ = buffer->ReadInt<int>();
-    packet->piece_type_ = (PieceType) buffer->ReadInt<uint8_t>();
-    packet->is_capture_ = buffer->ReadBool();
     return packet;
   }
 };
@@ -161,5 +162,21 @@ class ClientReadyPacketSerializerV1 : public znet::PacketSerializer<ClientReadyP
 
   Ref<ClientReadyPacket> Deserialize(Ref<znet::Buffer> buffer) override {
     return CreateRef<ClientReadyPacket>();
+  }
+};
+
+class EndGamePacketSerializerV1 : public znet::PacketSerializer<EndGamePacket> {
+ public:
+  EndGamePacketSerializerV1() : PacketSerializer<EndGamePacket>(7) {}
+
+  Ref<znet::Buffer> Serialize(Ref<EndGamePacket> packet, Ref<znet::Buffer> buffer) override {
+    buffer->WriteInt((uint8_t) packet->winner_);
+    return buffer;
+  }
+
+  Ref<EndGamePacket> Deserialize(Ref<znet::Buffer> buffer) override {
+    auto packet = CreateRef<EndGamePacket>();
+    packet->winner_ = (PieceColor) buffer->ReadInt<uint8_t>();
+    return packet;
   }
 };

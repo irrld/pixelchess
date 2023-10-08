@@ -82,16 +82,18 @@ add_subdirectory(znet/znet)
 ########## SOURCE FILES AND INCLUDE DIRECTORIES ##########
 
 set(GlistApp_SOURCES
-        ${APP_DIR}/src/Util.cpp
+        ${APP_DIR}/src/util.cpp
+        ${APP_DIR}/src/color.cpp
         ${APP_DIR}/src/app/main.cpp
-        ${APP_DIR}/src/app/gApp.cpp
-        ${APP_DIR}/src/MenuCanvas.cpp
-        ${APP_DIR}/src/MessageCanvas.cpp
-        ${APP_DIR}/src/GameCanvas.cpp
-        ${APP_DIR}/src/chess/ChessBoard.cpp
-        ${APP_DIR}/src/chess/Piece.cpp
-        ${APP_DIR}/src/net/Packets.cpp
-        ${APP_DIR}/src/net/ChessConnection.cpp
+        ${APP_DIR}/src/app/app.cpp
+        ${APP_DIR}/src/loading_canvas.cpp
+        ${APP_DIR}/src/menu_canvas.cpp
+        ${APP_DIR}/src/message_canvas.cpp
+        ${APP_DIR}/src/game_canvas.cpp
+        ${APP_DIR}/src/chess/chess_board.cpp
+        ${APP_DIR}/src/chess/piece.cpp
+        ${APP_DIR}/src/net/packets.cpp
+        ${APP_DIR}/src/net/chess_connection.cpp
 )
 
 add_executable(${APP_NAME}

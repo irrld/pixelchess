@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include "gBaseCanvas.h"
-#include "app/gApp.h"
-#include "gImage.h"
-#include "Util.h"
-#include "app/Button.h"
 #include <thread>
+#include "app/app.h"
+#include "app/button.h"
+#include "gBaseCanvas.h"
+#include "gImage.h"
+#include "util.h"
 
 class MessageCanvas : public gBaseCanvas {
  public:

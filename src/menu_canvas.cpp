@@ -5,20 +5,22 @@
 *      Author: noyan
 */
 
-#include "MenuCanvas.h"
+#include "menu_canvas.h"
 #include <cmath>
-#include "GameCanvas.h"
-#include "MessageCanvas.h"
+#include "game_canvas.h"
+#include "message_canvas.h"
 
 HostTask::HostTask(gApp* root) : root(root) {
   title = "Creating server...";
   znet::ServerConfig config{"127.0.0.1", 44025};
   server = CreateRef<znet::Server>(config);
   completed = false;
+  wait = false;
   thread = CreateRef<std::thread>([&]() {
     znet::Result result;
     title = "Binding server...";
     if ((result = server->Bind()) != znet::Result::Success) {
+      wait = true;
       gLogi("HostTask") << "Failed to bind server! Result: " << (int) result;
       root->setCurrentCanvas(new MessageCanvas(root, "Failed to bind server!"));
       return;
@@ -28,7 +30,13 @@ HostTask::HostTask(gApp* root) : root(root) {
     connection->SetOnConnect([this]() {
       completed = true;
     });
-    if ((result = server->Listen()) != znet::Result::Success) {
+    connection->SetOnOpponentDisconnect([root]() {
+      // changing the canvas will close and cleanup the server
+      // no need to do here
+      root->setCurrentCanvas(new MessageCanvas(root, "Opponent disconnected from the game!"));
+    });
+    if ((result = server->Listen()) != znet::Result::Completed) {
+      wait = true;
       gLogi("HostTask") << "Failed to listen server! Result: " << (int) result;
       root->setCurrentCanvas(new MessageCanvas(root, "Failed to listen server!"));
       return;
@@ -37,6 +45,11 @@ HostTask::HostTask(gApp* root) : root(root) {
 }
 
 HostTask::~HostTask() {
+  if (wait) {
+    if (thread && thread->joinable()) {
+      thread->join();
+    }
+  }
 }
 
 bool HostTask::Update() {
@@ -59,20 +72,38 @@ JoinTask::JoinTask(gApp* root, std::string host, int port) : root(root), host(ho
   znet::ClientConfig config{host, port};
   client_ = CreateRef<znet::Client>(config);
   completed = false;
-  thread_ = CreateRef<std::thread>([host, port, this]() {
+  wait = false;
+  thread_ = CreateRef<std::thread>([root, host, port, this]() {
     connection = CreateRef<ChessConnectionNetwork>(client_);
     connection->SetOnConnect([this]() {
       title = "Loading the board...";
       completed = true;
     });
     title = "Connecting to " + host + ":" + std::to_string(port) + "...";
-    client_->Bind();
-    client_->Connect();
+    znet::Result result;
+    if ((result = client_->Bind()) != znet::Result::Success) {
+      wait = true;
+      gLogi("HostTask") << "Failed to bind client! Result: " << (int) result;
+      root->setCurrentCanvas(new MessageCanvas(root, "Failed to bind client!"));
+      return;
+    }
+    result = client_->Connect();
+    if (result != znet::Result::Completed) {
+      wait = true;
+      gLogi("HostTask") << "Failed to connect to the server! Result: " << (int) result;
+      root->setCurrentCanvas(new MessageCanvas(root, "Failed to connect to the server!"));
+      return;
+    }
+    root->setCurrentCanvas(new MessageCanvas(root, "Opponent disconnected from the game!"));
   });
 }
 
 JoinTask::~JoinTask() {
-
+  if (wait) {
+    if (thread_ && thread_->joinable()) {
+      thread_->join();
+    }
+  }
 }
 
 bool JoinTask::Update() {
@@ -118,9 +149,24 @@ void MenuCanvas::setup() {
   title = "";
   task = nullptr;
   appmanager->setTargetFramerate(120);
+  fade_in_ = !root->loaded_;
+  root->loaded_ = true;
+  fade_in_timer_ = 0.0f;
+  fade_color_ = RGB{0x1c / 255.0f, 0x1e / 255.0f, 0x25 / 255.0f};
+  back_color_ = RGB{0x4c / 255.0f, 0x54 / 255.0f, 0x65 / 255.0f};
+  clear_color_ = back_color_;
 }
 
 void MenuCanvas::update() {
+  fade_in_timer_ += appmanager->getElapsedTime();
+  if (fade_in_) {
+    clear_color_ = interpolateColors(fade_color_, back_color_, std::min(fade_in_timer_, 1.0));
+    if (fade_in_timer_ >= 1.5f) {
+      fade_in_ = false;
+    }
+    return;
+  }
+
   if (task) {
     title = task->GetTitle();
   } else {
@@ -148,8 +194,15 @@ void MenuCanvas::update() {
 }
 
 void MenuCanvas::draw() {
+  clearColor(gColor{clear_color_.r, clear_color_.g, clear_color_.b});
+  if (fade_in_ && fade_in_timer_ < 0.5f) {
+    return;
+  }
+  const gColor& og_color = renderer->getColor();
+  if (fade_in_) {
+    setColor(255, 255, 255, std::min((int) ((fade_in_timer_ - 0.5f) * 255.0f), 255));
+  }
   if (loading) {
-    clearColor(0x4c, 0x54, 0x65);
     int size = 80;
     int scale = 3;
     int offset_x = (getWidth() / 2) - (size / 2);
@@ -163,15 +216,16 @@ void MenuCanvas::draw() {
       white_pieces.drawSub(x + 8, y + 16, 16 * scale, 32 * scale, 16 * i, 0, 16, 32, 8, 16, (int) (delta * 50.0f) % 360);
     }
     RenderUtil::DrawFont(title, getWidth() / 2, 150, {1.0f, 1.0f, 1.0f}, true);
+    setColor(og_color);
     return;
   }
-  clearColor(0x4c, 0x54, 0x65);
   // buttons
   join_button->Draw();
   host_button->Draw();
   settings_button->Draw();
   // logo
   RenderUtil::DrawFont(&logo_font, "Chess Tacos", getWidth() / 2 - logo_font.getStringWidth("Chess Tacos") / 2, 150);
+  setColor(og_color);
 }
 
 void MenuCanvas::keyPressed(int key) {

@@ -3,8 +3,8 @@
 
 #include <string>
 #include <utility>
-#include "Util.h"
 #include "gAppManager.h"
+#include "util.h"
 
 class Button {
  public:

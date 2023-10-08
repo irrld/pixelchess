@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <vector>
-#include "Util.h"
+#include "util.h"
 
 enum PieceType : uint8_t {
   kPieceTypeNone,
@@ -40,6 +40,7 @@ class Piece {
   Ref<Piece> CopyTeam(PieceColor color) {
     return CreateRef<Piece>(type_, color, move_function_);
   }
+
  private:
   PieceType type_;
   PieceColor color_;

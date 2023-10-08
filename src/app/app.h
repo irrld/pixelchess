@@ -19,6 +19,10 @@ public:
 
 	void setup();
 	void update();
+
+    void stop();
+
+    bool loaded_ = false;
 };
 
 #endif /* GAPP_H_ */

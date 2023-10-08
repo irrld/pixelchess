@@ -1,5 +1,5 @@
-#include "MessageCanvas.h"
-#include "MenuCanvas.h"
+#include "message_canvas.h"
+#include "menu_canvas.h"
 
 MessageCanvas::MessageCanvas(gApp* root, std::string message) : gBaseCanvas(root), message(message) {
   this->root = root;
