@@ -29,6 +29,7 @@ void MessageCanvas::draw() {
   back_button->Draw();
   // logo
   RenderUtil::DrawFont(message, getWidth() / 2, 300);
+  root->DrawCursor();
 }
 
 void MessageCanvas::keyPressed(int key) {

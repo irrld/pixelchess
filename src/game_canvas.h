@@ -8,11 +8,6 @@
 #include "gImage.h"
 #include "net/packets.h"
 
-enum CursorType {
-  kArrow,
-  kHand,
-  kHandClosed
-};
 
 class GameCanvas : public gBaseCanvas {
  public:
@@ -50,8 +45,6 @@ class GameCanvas : public gBaseCanvas {
   void UpdateFallAnimation();
  private:
   gApp* root_;
-  gImage cursor_;
-  int cursor_width_, cursor_height_;
   gImage board_textures_[2];
   gImage outliner_;
   int board_pos_x, board_pos_y;
@@ -84,8 +77,6 @@ class GameCanvas : public gBaseCanvas {
   bool ended_ = false;
   PieceColor winner_color_;
   double dance_anim_time_ = 0.0f;
-  int cursor_pos_x_ = -100, cursor_pos_y_ = -100;
-  CursorType cursor_type_ = CursorType::kArrow;
  private:
   void SetInfoText(const std::string& text);
 };

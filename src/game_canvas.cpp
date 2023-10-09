@@ -1,7 +1,7 @@
 #include "game_canvas.h"
 #include "message_canvas.h"
 
-GameCanvas::GameCanvas(gApp* root, Ref<ChessConnection> connection, Ref<std::thread> thread) : gBaseCanvas(root), connection_(connection), thread_(thread) {
+GameCanvas::GameCanvas(gApp* root, Ref<ChessConnection> connection, Ref<std::thread> thread) : gBaseCanvas(root), root_(root), connection_(connection), thread_(thread) {
   this->root_ = root;
 }
 
@@ -20,10 +20,6 @@ void GameCanvas::setup() {
     player_color_ = kPieceColorWhite;
     flip_board_ = false;
   }
-  cursor_.loadImage("cursor.png");
-  cursor_.setFiltering(2, 2);
-  cursor_height_ = cursor_.getHeight();
-  cursor_width_ = 16;
   board_textures_[0].loadImage("boards/board_persp_01.png");
   board_textures_[0].setFiltering(2, 2);
   board_textures_[1].loadImage("boards/board_persp_01_flipped.png");
@@ -83,9 +79,6 @@ void GameCanvas::setup() {
       SetInfoText("You lost!");
     }
   });
-  appmanager->getWindow()->setCursorMode(0x00034002); // GLFW_CURSOR_HIDDEN
-  appmanager->setTargetFramerate(120);
-
   connection_->Ready();
 }
 
@@ -129,10 +122,7 @@ void GameCanvas::draw() {
   DrawBoard();
   DrawInfoText();
   // pos * 2 -> pos * 4 / 2 -> pos * pixelScale / 2
-  cursor_.drawSub(cursor_pos_x_ - cursor_width_ * 2, cursor_pos_y_ - cursor_height_,
-                  cursor_width_ * 4, cursor_height_ * 4,
-                  cursor_type_ * 16, 0,
-                  cursor_width_, cursor_height_);
+  root_->DrawCursor();
   /*for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       RenderUtil::DrawFont(gToStr(x) + " " + gToStr(y),
@@ -322,8 +312,7 @@ void GameCanvas::charPressed(unsigned int codepoint) {
 }
 
 void GameCanvas::mouseMoved(int x, int y) {
-  cursor_pos_x_ = x;
-  cursor_pos_y_ = y;
+  root_->SetCursorPos(x, y);
   if (input_lock_ || promoting_ || connection_->GetCurrentTurn() != player_color_) {
     return;
   }
@@ -346,18 +335,17 @@ void GameCanvas::mouseMoved(int x, int y) {
 
 void GameCanvas::mouseDragged(int x, int y, int button) {
 //	gLogi("GameCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
-  cursor_pos_x_ = x;
-  cursor_pos_y_ = y;
-  cursor_type_ = CursorType::kHandClosed;
+  root_->SetCursorPos(x, y);
+  root_->SetCursorType(CursorType::kHandClosed);
 }
 
 void GameCanvas::mousePressed(int x, int y, int button) {
 //	gLogi("GameCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
-  cursor_type_ = CursorType::kHandClosed;
+  root_->SetCursorType(CursorType::kHandClosed);
 }
 
 void GameCanvas::mouseReleased(int x, int y, int button) {
-  cursor_type_ = CursorType::kArrow;
+  root_->SetCursorType(CursorType::kArrow);
   if (animate_ || input_lock_ || connection_->GetCurrentTurn() != player_color_) {
     return;
   }

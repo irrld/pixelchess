@@ -148,7 +148,6 @@ void MenuCanvas::setup() {
   loading_anim = 0;
   title = "";
   task = nullptr;
-  appmanager->setTargetFramerate(120);
   fade_in_ = !root->loaded_;
   root->loaded_ = true;
   fade_in_timer_ = 0.0f;
@@ -217,6 +216,7 @@ void MenuCanvas::draw() {
     }
     RenderUtil::DrawFont(title, getWidth() / 2, 150, {1.0f, 1.0f, 1.0f}, true);
     setColor(og_color);
+    root->DrawCursor();
     return;
   }
   // buttons
@@ -226,6 +226,7 @@ void MenuCanvas::draw() {
   // logo
   RenderUtil::DrawFont(&logo_font, "Chess Tacos", getWidth() / 2 - logo_font.getStringWidth("Chess Tacos") / 2, 150);
   setColor(og_color);
+  root->DrawCursor();
 }
 
 void MenuCanvas::keyPressed(int key) {
@@ -242,6 +243,7 @@ void MenuCanvas::charPressed(unsigned int codepoint) {
 
 void MenuCanvas::mouseMoved(int x, int y) {
   //	gLogi("gCanvas") << "mouseMoved" << ", x:" << x << ", y:" << y;
+  root->SetCursorPos(x, y);
   if (loading) {
     return;
   }
@@ -252,10 +254,13 @@ void MenuCanvas::mouseMoved(int x, int y) {
 
 void MenuCanvas::mouseDragged(int x, int y, int button) {
   //	gLogi("gCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
+  root->SetCursorPos(x, y);
+  root->SetCursorType(CursorType::kHandClosed);
 }
 
 void MenuCanvas::mousePressed(int x, int y, int button) {
   //	gLogi("gCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
+  root->SetCursorType(CursorType::kHandClosed);
   if (loading) {
     return;
   }
@@ -266,6 +271,7 @@ void MenuCanvas::mousePressed(int x, int y, int button) {
 
 void MenuCanvas::mouseReleased(int x, int y, int button) {
   //	gLogi("gCanvas") << "mouseReleased" << ", button:" << button;
+  root->SetCursorType(CursorType::kArrow);
   if (loading) {
     return;
   }

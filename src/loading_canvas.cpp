@@ -9,7 +9,7 @@ LoadingCanvas::~LoadingCanvas() {
 }
 
 void LoadingCanvas::setup() {
-  brand_logo_.loadImage("teoncreative_logo_white.png");
+  brand_logo_.loadImage("teoncreative_logo.png");
   brand_width_ = brand_logo_.getWidth() / 4;
   brand_height_ = brand_logo_.getHeight() / 4;
   brand_x_ = (getWidth() - brand_width_) / 2;
