@@ -43,6 +43,11 @@ ChessConnectionLocal::~ChessConnectionLocal() {
 }
 
 void ChessConnectionLocal::Move(int x, int y, int to_x, int to_y, bool switch_turn) {
+#ifdef DEBUG
+  if (x < 0 || x > 7 || y < 0 || y > 7 || to_x < 0 || to_x > 7 || to_y < 0 || to_y > 7) {
+    throw std::runtime_error("Invalid move");
+  }
+#endif
   auto pk = CreateRef<MovePacket>();
   pk->x_ = x;
   pk->y_ = y;
@@ -54,8 +59,15 @@ void ChessConnectionLocal::Move(int x, int y, int to_x, int to_y, bool switch_tu
   }
 }
 
-void ChessConnectionLocal::Promote(int x, int y, PieceType piece_type) {
-  // todo
+void ChessConnectionLocal::Promote(int x, int y, PieceType piece_type, PieceColor piece_color) {
+  auto pk = CreateRef<SetPiecePacket>();
+  pk->x_ = x;
+  pk->y_ = y;
+  pk->type_ = piece_type;
+  pk->color_ = piece_color;
+  opponent_session_->SendPacket(pk);
+  on_piece_change_(x, y, piece_type, piece_color);
+  SwitchTurn();
 }
 
 bool ChessConnectionLocal::IsOpen() {
@@ -129,6 +141,9 @@ bool ChessConnectionLocal::OnClientConnect(znet::ServerClientConnectedEvent& eve
   auto end_game_handler = CreateRef<znet::PacketHandler<EndGamePacket, EndGamePacketSerializerV1>>();
   end_game_handler->AddReceiveCallback(ZNET_BIND_FN(OnEndGamePacket));
   layer.AddPacketHandler(end_game_handler);
+  auto set_piece_handler = CreateRef<znet::PacketHandler<SetPiecePacket, SetPiecePacketSerializerV1>>();
+  set_piece_handler->AddReceiveCallback(ZNET_BIND_FN(OnSetPiecePacket));
+  layer.AddPacketHandler(set_piece_handler);
   on_connect_();
   return false;
 }
@@ -164,6 +179,11 @@ bool ChessConnectionLocal::OnMovePacket(znet::ConnectionSession&, Ref<MovePacket
   return true;
 }
 
+bool ChessConnectionLocal::OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet) {
+  on_piece_change_(packet->x_, packet->y_, packet->type_, packet->color_);
+  return true;
+}
+
 ChessConnectionNetwork::ChessConnectionNetwork(Ref<znet::Client> client) : client_(client) {
   board_data_ = nullptr;
   client->SetEventCallback(ZNET_BIND_FN(OnEvent));
@@ -174,6 +194,11 @@ ChessConnectionNetwork::~ChessConnectionNetwork() {
 }
 
 void ChessConnectionNetwork::Move(int x, int y, int to_x, int to_y, bool switch_turn) {
+#ifdef DEBUG
+  if (x < 0 || x > 7 || y < 0 || y > 7 || to_x < 0 || to_x > 7 || to_y < 0 || to_y > 7) {
+    throw std::runtime_error("Invalid move");
+  }
+#endif
   auto pk = CreateRef<MovePacket>();
   pk->x_ = x;
   pk->y_ = y;
@@ -185,8 +210,14 @@ void ChessConnectionNetwork::Move(int x, int y, int to_x, int to_y, bool switch_
   }
 }
 
-void ChessConnectionNetwork::Promote(int x, int y, PieceType piece_type) {
-
+void ChessConnectionNetwork::Promote(int x, int y, PieceType piece_type, PieceColor piece_color) {
+  auto pk = CreateRef<SetPiecePacket>();
+  pk->x_ = x;
+  pk->y_ = y;
+  pk->type_ = piece_type;
+  pk->color_ = piece_color;
+  client_->client_session()->SendPacket(pk);
+  on_piece_change_(x, y, piece_type, piece_color);
 }
 
 bool ChessConnectionNetwork::IsOpen() {
@@ -235,6 +266,9 @@ bool ChessConnectionNetwork::OnClientConnectedToServerEvent(znet::ClientConnecte
   auto end_game_handler = CreateRef<znet::PacketHandler<EndGamePacket, EndGamePacketSerializerV1>>();
   end_game_handler->AddReceiveCallback(ZNET_BIND_FN(OnEndGamePacket));
   layer.AddPacketHandler(end_game_handler);
+  auto set_piece_handler = CreateRef<znet::PacketHandler<SetPiecePacket, SetPiecePacketSerializerV1>>();
+  set_piece_handler->AddReceiveCallback(ZNET_BIND_FN(OnSetPiecePacket));
+  layer.AddPacketHandler(set_piece_handler);
 
   auto pk = CreateRef<BoardRequestPacket>();
   session->SendPacket(pk);
@@ -269,6 +303,11 @@ bool ChessConnectionNetwork::OnEndGamePacket(znet::ConnectionSession&, Ref<EndGa
   return true;
 }
 
+bool ChessConnectionNetwork::OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet) {
+  on_piece_change_(packet->x_, packet->y_, packet->type_, packet->color_);
+  return true;
+}
+
 ChessConnectionDummy::ChessConnectionDummy() {
   board_data_ = CreateRef<std::array<PieceData, 8 * 8>>();
   std::array<PieceData, 8 * 8>& board_data = *board_data_.get();
@@ -296,4 +335,8 @@ ChessConnectionDummy::ChessConnectionDummy() {
 
   board_data[ChessBoard::PosToIndex(4, 7)] = {true, kPieceTypeKing, kPieceColorBlack};
   board_data[ChessBoard::PosToIndex(3, 7)] = {true, kPieceTypeQueen, kPieceColorBlack};
+}
+
+void ChessConnectionDummy::Promote(int x, int y, PieceType piece_type, PieceColor piece_color) {
+  on_piece_change_(x, y, piece_type, piece_color);
 }

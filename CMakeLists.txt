@@ -86,10 +86,11 @@ set(GlistApp_SOURCES
         ${APP_DIR}/src/color.cpp
         ${APP_DIR}/src/app/main.cpp
         ${APP_DIR}/src/app/app.cpp
-        ${APP_DIR}/src/loading_canvas.cpp
-        ${APP_DIR}/src/menu_canvas.cpp
-        ${APP_DIR}/src/message_canvas.cpp
-        ${APP_DIR}/src/game_canvas.cpp
+        ${APP_DIR}/src/canvas/promote_screen.cpp
+        ${APP_DIR}/src/canvas/loading_canvas.cpp
+        ${APP_DIR}/src/canvas/menu_canvas.cpp
+        ${APP_DIR}/src/canvas/message_canvas.cpp
+        ${APP_DIR}/src/canvas/game_canvas.cpp
         ${APP_DIR}/src/chess/chess_board.cpp
         ${APP_DIR}/src/chess/piece.cpp
         ${APP_DIR}/src/net/packets.cpp

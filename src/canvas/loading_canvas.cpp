@@ -29,18 +29,18 @@ void LoadingCanvas::update() {
 void LoadingCanvas::draw() {
   clearColor(0x1c, 0x1e, 0x25);
   const gColor& old_color = renderer->getColor();
-  if (delta_ < 4) {
+  if (delta_ < 3) {
     int opacity = delta_ * delta_ * 255;
-    if (delta_ > 3) {
-        opacity = 255 - (delta_ - 3) * (delta_ - 3) * 255;
+    if (delta_ > 2) {
+        opacity = 255 - (delta_ - 2) * (delta_ - 2) * 255;
     }
     renderer->setColor(255, 255, 255, std::min(opacity, 255));
     brand_logo_.draw(brand_x_, brand_y_, brand_width_, brand_height_);
-  } else if (delta_ < 8) {
-    double delta = this->delta_ - 4;
+  } else if (delta_ < 6) {
+    double delta = this->delta_ - 3;
     int opacity = delta * delta * 255;
-    if (delta > 3) {
-        opacity = 255 - (delta - 3) * (delta - 3) * 255;
+    if (delta > 2) {
+        opacity = 255 - (delta - 2) * (delta - 2) * 255;
     }
     renderer->setColor(255, 255, 255, std::min(opacity, 255));
     glist_logo_.draw(glist_x_, glist_y_, glist_width_, glist_height_);

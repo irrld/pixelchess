@@ -7,6 +7,7 @@ gImage* RenderUtil::button_;
 gImage* RenderUtil::button_pressed_;
 gImage* RenderUtil::button_hover_;
 gImage* RenderUtil::progress_bar_;
+gImage* RenderUtil::panel_;
 
 void RenderUtil::Setup() {
   font_ = new gFont();
@@ -25,6 +26,9 @@ void RenderUtil::Setup() {
   progress_bar_ = new gImage();
   progress_bar_->loadImage("progress_bar.png");
   progress_bar_->setFiltering(2, 2);
+  panel_ = new gImage();
+  panel_->loadImage("panel.png");
+  panel_->setFiltering(2, 2);
 }
 
 void RenderUtil::DrawFont(const std::string& text, int x, int y, const gColor& color, bool bold) {
@@ -73,4 +77,49 @@ void RenderUtil::DrawProgress(int x, int y, int percentage, int width) {
                            4, 0,
                            4, 4);
   }
+}
+
+void RenderUtil::DrawRect(int x, int y, int width, int height) {
+  if (width % 4 != 0) {
+    width += 4 - width % 4;
+  }
+  if (height % 4 != 0) {
+    height += 4 - height % 4;
+  }
+  int scaled_width = width;
+  int scaled_height = height;
+  int dx = x;
+  int dy = y;
+  int size = kPixelScale * 4;
+  int woffset = scaled_width - size;
+  int hoffset = scaled_height - size;
+
+  // fill
+  int fill_width = woffset / 2;
+  int fill_height = hoffset / 2 + size;
+  // top left
+  panel_->drawSub(dx + size, dy + size, fill_width, fill_height - size, 3, 3, 1, 1);
+  panel_->drawSub(dx, dy + size, size, fill_height - size, 0, 3, 4, 1);
+  panel_->drawSub(dx + size, dy, fill_width, size, 3, 0, 1, 4);
+
+  // top right
+  panel_->drawSub(dx + size + fill_width, dy + size, fill_width, fill_height - size, 4, 3, 1, 1);
+  panel_->drawSub(dx + fill_width * 2, dy + size, size, fill_height - size, 4, 3, 4, 1);
+  panel_->drawSub(dx + size + fill_width, dy, fill_width, size, 4, 0, 1, 4);
+
+  // bottom left
+  panel_->drawSub(dx + size, dy + fill_height, fill_width, fill_height - size * 2, 3, 4, 1, 1);
+  panel_->drawSub(dx, dy + fill_height, size, fill_height - size * 2, 0, 4, 4, 1);
+  panel_->drawSub(dx + size, dy + fill_height * 2 - size * 2, fill_width, size, 3, 4, 1, 4);
+
+  // bottom right
+  panel_->drawSub(dx + size + fill_width, dy + fill_height, fill_width, fill_height - size * 2, 4, 4, 1, 1);
+  panel_->drawSub(dx + fill_width * 2, dy + fill_height, size, fill_height - size * 2, 4, 4, 4, 1);
+  panel_->drawSub(dx + size + fill_width, dy + fill_height * 2 - size * 2, fill_width, size, 4, 4, 1, 4);
+
+  // corners
+  panel_->drawSub(dx, dy, size, size, 0, 0, 4, 4);
+  panel_->drawSub(dx + woffset, dy, size, size, 4, 0, 4, 4);
+  panel_->drawSub(dx, dy + hoffset, size, size, 0, 4, 4, 4);
+  panel_->drawSub(dx + woffset, dy + hoffset, size, size, 4, 4, 4, 4);
 }

@@ -13,12 +13,13 @@ class ChessConnection {
   using OnConnectFunction = std::function<void()>;
   using StartGameFunction = std::function<void()>;
   using EndGameFunction = std::function<void(PieceColor)>;
+  using PieceChangeFunction = std::function<void(int, int, PieceType, PieceColor)>;
 
   ChessConnection();
   virtual ~ChessConnection();
 
   virtual void Move(int x, int y, int to_x, int to_y, bool switch_turn) = 0;
-  virtual void Promote(int x, int y, PieceType piece_type) = 0;
+  virtual void Promote(int x, int y, PieceType piece_type, PieceColor piece_color) = 0;
 
   virtual bool IsOpen() = 0;
 
@@ -53,12 +54,17 @@ class ChessConnection {
   void SetOnEndGame(EndGameFunction on_end_game) {
     on_end_game_ = std::move(on_end_game);
   }
+
+  void SetOnPieceChance(PieceChangeFunction on_piece_change) {
+    on_piece_change_ = std::move(on_piece_change);
+  }
  protected:
   TurnChangeFunction on_turn_change_;
   MoveFunction on_move_;
   OnConnectFunction on_connect_;
   StartGameFunction on_start_game_;
   EndGameFunction on_end_game_;
+  PieceChangeFunction on_piece_change_;
 };
 
 class ChessConnectionLocal : public ChessConnection {
@@ -69,7 +75,7 @@ class ChessConnectionLocal : public ChessConnection {
   ~ChessConnectionLocal() override;
 
   void Move(int x, int y, int to_x, int to_y, bool switch_turn) override;
-  void Promote(int x, int y, PieceType piece_type) override;
+  void Promote(int x, int y, PieceType piece_type, PieceColor piece_color) override;
   bool IsOpen() override;
 
   bool IsHost() override { return true; }
@@ -107,6 +113,7 @@ class ChessConnectionLocal : public ChessConnection {
   bool OnBoardRequestPacket(znet::ConnectionSession&, Ref<BoardRequestPacket> packet);
   bool OnClientReadyPacket(znet::ConnectionSession&, Ref<ClientReadyPacket> packet);
   bool OnEndGamePacket(znet::ConnectionSession&, Ref<EndGamePacket> packet);
+  bool OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet);
   void StartGame();
 };
 
@@ -116,7 +123,7 @@ class ChessConnectionNetwork : public ChessConnection {
   ~ChessConnectionNetwork() override;
 
   void Move(int x, int y, int to_x, int to_y, bool switch_turn) override;
-  void Promote(int x, int y, PieceType piece_type) override;
+  void Promote(int x, int y, PieceType piece_type, PieceColor piece_color) override;
   bool IsOpen() override;
 
   bool IsHost() override { return false; }
@@ -145,6 +152,7 @@ class ChessConnectionNetwork : public ChessConnection {
   bool OnSetTurnPacket(znet::ConnectionSession&, Ref<SetTurnPacket> packet);
   bool OnStartGamePacket(znet::ConnectionSession&, Ref<StartGamePacket> packet);
   bool OnEndGamePacket(znet::ConnectionSession&, Ref<EndGamePacket> packet);
+  bool OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet);
 };
 
 class ChessConnectionDummy : public ChessConnection {
@@ -153,7 +161,7 @@ class ChessConnectionDummy : public ChessConnection {
   ~ChessConnectionDummy() override = default;
 
   void Move(int x, int y, int to_x, int to_y, bool switch_turn) override {}
-  void Promote(int x, int y, PieceType piece_type) override {}
+  void Promote(int x, int y, PieceType piece_type, PieceColor piece_color) override;
   bool IsOpen() override { return false; }
 
   Ref<std::array<PieceData, 8 * 8>> GetBoardData() override { return board_data_; }

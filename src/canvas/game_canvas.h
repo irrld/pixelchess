@@ -7,7 +7,7 @@
 #include "gBaseCanvas.h"
 #include "gImage.h"
 #include "net/packets.h"
-
+#include "promote_screen.h"
 
 class GameCanvas : public gBaseCanvas {
  public:
@@ -21,7 +21,7 @@ class GameCanvas : public gBaseCanvas {
   void keyPressed(int key);
   void keyReleased(int key);
   void charPressed(unsigned int codepoint);
-  void mouseMoved(int x, int y );
+  void mouseMoved(int x, int y);
   void mouseDragged(int x, int y, int button);
   void mousePressed(int x, int y, int button);
   void mouseReleased(int x, int y, int button);
@@ -37,12 +37,16 @@ class GameCanvas : public gBaseCanvas {
   bool Move(int x, int y, int to_x, int to_y);
   void DrawBoard();
   void DrawInfoText();
+  void DrawPromote();
   void DrawPiece(int x, int y);
+  void DrawPieceAnimating(PieceType type, PieceColor color, int board_x, int board_y, int to_board_x, int to_board_y, float progress);
+  void DrawPieceAnimatingUnbound(PieceType type, PieceColor color, int x, int y, int to_board_x, int to_board_y, float progress);
+  void DrawPiece(PieceType type, PieceColor color, int x, int y, float scale);
+  void DrawOutline(PieceType type, int x, int y, float scale);
   int ConvertY(int y);
   void ResetSelection();
 
   void UpdateInfoText();
-  void UpdateFallAnimation();
  private:
   gApp* root_;
   gImage board_textures_[2];
@@ -51,20 +55,23 @@ class GameCanvas : public gBaseCanvas {
   int board_width_, board_height_;
   gImage white_pieces_;
   gImage black_pieces_;
+  gImage mask_pieces_;
   Ref<ChessBoard> chess_board_;
-  int hover_piece_x_, hover_piece_y_;
-  int move_piece_x_, move_piece_y_;
+  int hover_piece_x_ = -1, hover_piece_y_ = -1;
+  int move_piece_x_ = -1, move_piece_y_ = -1;
+  int promote_piece_x_ = -1, promote_piece_y_ = -1;
   bool show_moves_;
   PieceColor player_color_;
   gFont font_;
   bool animate_ = false;
   int animate_move_piece_x_, animate_move_piece_y_;
   float animate_from_pos_x_, animate_from_pos_y_;
+  float animate_current_pos_x_, animate_current_pos_y_;
   float animate_to_pos_x_, animate_to_pos_y_;
+  double animate_start_, animate_duration_;
   int piece_offset_;
   bool input_lock_;
   double game_time_ = 0.0f;
-  double fall_anim_dist_ = 1.0f;
   std::string info_text_;
   int info_pos_x_, info_pos_y_;
   Ref<ChessConnection> connection_;
@@ -77,6 +84,7 @@ class GameCanvas : public gBaseCanvas {
   bool ended_ = false;
   PieceColor winner_color_;
   double dance_anim_time_ = 0.0f;
+  PromoteScreen* promote_screen_;
  private:
   void SetInfoText(const std::string& text);
 };

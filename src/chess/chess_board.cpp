@@ -43,6 +43,10 @@ void ChessBoard::SetPiece(int x, int y, Ref<Piece> piece) {
   board_[PosToIndex(x, y)] = std::move(piece);
 }
 
+void ChessBoard::SetPiece(int x, int y, PieceType type, PieceColor color) {
+  SetPiece(x, y, pieces_[type]->CopyTeam(color));
+}
+
 bool ChessBoard::IsValidMove(int x, int y, int to_x, int to_y) {
   if (x < 0 || x > 8 || y < 0 || y > 8 || (x == to_x && y == to_y)) {
     return false;

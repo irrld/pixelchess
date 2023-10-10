@@ -56,6 +56,16 @@ class EndGamePacket : public znet::Packet {
   PieceColor winner_;
 };
 
+class SetPiecePacket : public znet::Packet {
+ public:
+  SetPiecePacket() : znet::Packet(8) { }
+
+  int x_;
+  int y_;
+  PieceType type_;
+  PieceColor color_;
+};
+
 class UpdateBoardPacketSerializerV1 : public znet::PacketSerializer<UpdateBoardPacket> {
  public:
   UpdateBoardPacketSerializerV1() : PacketSerializer<UpdateBoardPacket>(1) {}
@@ -177,6 +187,28 @@ class EndGamePacketSerializerV1 : public znet::PacketSerializer<EndGamePacket> {
   Ref<EndGamePacket> Deserialize(Ref<znet::Buffer> buffer) override {
     auto packet = CreateRef<EndGamePacket>();
     packet->winner_ = (PieceColor) buffer->ReadInt<uint8_t>();
+    return packet;
+  }
+};
+
+class SetPiecePacketSerializerV1 : public znet::PacketSerializer<SetPiecePacket> {
+ public:
+  SetPiecePacketSerializerV1() : PacketSerializer<SetPiecePacket>(8) {}
+
+  Ref<znet::Buffer> Serialize(Ref<SetPiecePacket> packet, Ref<znet::Buffer> buffer) override {
+    buffer->WriteInt(packet->x_);
+    buffer->WriteInt(packet->y_);
+    buffer->WriteInt((uint8_t) packet->type_);
+    buffer->WriteInt((uint8_t) packet->color_);
+    return buffer;
+  }
+
+  Ref<SetPiecePacket> Deserialize(Ref<znet::Buffer> buffer) override {
+    auto packet = CreateRef<SetPiecePacket>();
+    packet->x_ = buffer->ReadInt<int>();
+    packet->y_ = buffer->ReadInt<int>();
+    packet->type_ = (PieceType) buffer->ReadInt<uint8_t>();
+    packet->color_ = (PieceColor) buffer->ReadInt<uint8_t>();
     return packet;
   }
 };

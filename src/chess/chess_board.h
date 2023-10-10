@@ -19,6 +19,7 @@ class ChessBoard {
 
   Ref<Piece> GetPiece(int x, int y);
   void SetPiece(int x, int y, Ref<Piece> piece);
+  void SetPiece(int x, int y, PieceType type, PieceColor color);
 
   bool IsValidMove(int x, int y, int to_x, int to_y);
 

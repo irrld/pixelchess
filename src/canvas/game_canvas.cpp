@@ -13,6 +13,7 @@ GameCanvas::~GameCanvas() {
 }
 
 void GameCanvas::setup() {
+  enableAlphaBlending();
   if (!connection_->IsHost()) {
     player_color_ = kPieceColorBlack;
     flip_board_ = true;
@@ -33,6 +34,8 @@ void GameCanvas::setup() {
   white_pieces_.setFiltering(2, 2);
   black_pieces_.loadImage("pieces/BlackPieces-Sheet.png");
   black_pieces_.setFiltering(2, 2);
+  mask_pieces_.loadImage("pieces/MaskPieces-Sheet.png");
+  mask_pieces_.setFiltering(2, 2);
   outliner_.loadImage("outliner.png");
   outliner_.setFiltering(2, 2);
   ResetSelection();
@@ -41,6 +44,12 @@ void GameCanvas::setup() {
   input_lock_ = true;
   game_started_ = false;
   ended_ = false;
+  promote_screen_ = new PromoteScreen(root_, this, player_color_);
+  promote_screen_->Setup();
+  promote_screen_->SetSelectCallback([this](PieceType type) {
+    promoting_ = false;
+    connection_->Promote(promote_piece_x_, promote_piece_y_, type, player_color_);
+  });
   // todo move chess board spaghetti stuff to connection and handle everything there
   chess_board_ = CreateRef<ChessBoard>(*connection_->GetBoardData());
   connection_->SetOnMove([this](int x, int y, int to_x, int to_y) {
@@ -66,6 +75,7 @@ void GameCanvas::setup() {
   });
   connection_->SetOnStartGame([this]() {
     game_started_ = true;
+    input_lock_ = false;
   });
   connection_->SetOnEndGame([this](PieceColor color) {
     input_lock_ = true;
@@ -79,19 +89,22 @@ void GameCanvas::setup() {
       SetInfoText("You lost!");
     }
   });
+  connection_->SetOnPieceChance([this](int x, int y, PieceType type, PieceColor color) {
+    chess_board_->SetPiece(x, y, type, color);
+  });
   connection_->Ready();
 }
 
 
 void GameCanvas::update() {
   game_time_ += appmanager->getElapsedTime();
+  if (promoting_) {
+    promote_screen_->Update();
+  }
   UpdateInfoText();
   if (ended_) {
     dance_anim_time_ += appmanager->getElapsedTime();
     return;
-  }
-  if (game_started_) {
-    UpdateFallAnimation();
   }
 }
 
@@ -104,16 +117,6 @@ void GameCanvas::UpdateInfoText() {
   }
 }
 
-void GameCanvas::UpdateFallAnimation() {
-  if (fall_anim_dist_ > 0.0f) {
-    fall_anim_dist_ = Lerp(fall_anim_dist_, 0.0f, 0.01f + (game_time_ / 20.0f));
-    if (fall_anim_dist_ < 0.001f) {
-      fall_anim_dist_ = 0.0f;
-      input_lock_ = false;
-    }
-  }
-}
-
 void GameCanvas::draw() {
   clearColor(0x6f, 0x75, 0x83);
   if (!game_started_) {
@@ -121,15 +124,8 @@ void GameCanvas::draw() {
   }
   DrawBoard();
   DrawInfoText();
-  // pos * 2 -> pos * 4 / 2 -> pos * pixelScale / 2
+  DrawPromote();
   root_->DrawCursor();
-  /*for (int x = 0; x < 8; ++x) {
-    for (int y = 0; y < 8; ++y) {
-      RenderUtil::DrawFont(gToStr(x) + " " + gToStr(y),
-                    board_pos_x + (7 + x * 16) * RenderUtil::kPixelScale,
-                    board_pos_y + (10 + y * 12) * RenderUtil::kPixelScale, {1.0f, 0, 0});
-    }
-  }*/
 }
 
 void GameCanvas::HighlightPosition(int board_x, int board_y, const gColor& color) {
@@ -142,6 +138,8 @@ void GameCanvas::HighlightPosition(int board_x, int board_y, const gColor& color
 }
 
 bool GameCanvas::Move(int x, int y, int to_x, int to_y) {
+  animate_start_ = game_time_;
+  animate_duration_ = 0.18f;
   animate_move_piece_x_ = to_x;
   animate_move_piece_y_ = to_y;
   animate_from_pos_x_ = (7 + x * 16) * RenderUtil::kPixelScale;
@@ -162,8 +160,10 @@ bool GameCanvas::Move(int x, int y, int to_x, int to_y) {
         SetInfoText("Promote your pawn!");
         promoting_ = true;
         show_moves_ = false;
-        hover_piece_x_ = to_x;
-        hover_piece_y_ = to_y;
+        promote_piece_x_ = to_x;
+        promote_piece_y_ = to_y;
+        promote_screen_->Reset();
+        promote_screen_->SetPromotePosition(to_x, to_y);
         return false;
       } else {
         SetInfoText("Your opponent is promoting its pawn!");
@@ -176,8 +176,10 @@ bool GameCanvas::Move(int x, int y, int to_x, int to_y) {
         SetInfoText("Promote your pawn!");
         promoting_ = true;
         show_moves_ = false;
-        hover_piece_x_ = to_x;
-        hover_piece_y_ = to_y;
+        promote_piece_x_ = to_x;
+        promote_piece_y_ = to_y;
+        promote_screen_->Reset();
+        promote_screen_->SetPromotePosition(to_x, to_y);
         return false;
       } else {
         SetInfoText("Your opponent is promoting its pawn!");
@@ -224,16 +226,40 @@ void GameCanvas::DrawInfoText() {
   }
 }
 
+void GameCanvas::DrawPromote() {
+  if (!promoting_) {
+    return;
+  }
+  promote_screen_->Draw();
+}
+
 void GameCanvas::DrawPiece(int x, int y) {
+  int render_offset_x = (7 + x * 16) * RenderUtil::kPixelScale;
+  int render_offset_y = (6 + ConvertY(y) * 12 - piece_offset_) * RenderUtil::kPixelScale;
+
   Ref<Piece> piece = chess_board_->GetPiece(x, y);
   if (hover_piece_x_ == x && hover_piece_y_ == y) {
     if (!show_moves_) {
-      HighlightPosition(x, y, {0.0f, 139 / 255.0f, 203 / 255.0f});
+      if (piece && (!animate_ || (animate_move_piece_x_ != x && animate_move_piece_y_ != y))) {
+        const gColor& og_color = renderer->getColor();
+        renderer->setColor(0.0f, 0.545f, 0.796f);
+        DrawOutline(piece->GetType(), board_pos_x + render_offset_x, board_pos_y + render_offset_y, RenderUtil::kPixelScale);
+        renderer->setColor(og_color);
+      } else {
+        HighlightPosition(x, y, {0.0f, 0.545f, 0.796f});
+      }
     }
   }
   if (show_moves_) {
     if (move_piece_x_ == x && move_piece_y_ == y) {
-      HighlightPosition(x, y, {250 / 255.0f, 100 / 255.0f, 20 / 255.0f});
+      if (piece && (!animate_ || (animate_move_piece_x_ != x && animate_move_piece_y_ != y))) {
+        const gColor& og_color = renderer->getColor();
+        renderer->setColor(0.98f, 0.394f, 0.078f);
+        DrawOutline(piece->GetType(), board_pos_x + render_offset_x, board_pos_y + render_offset_y, RenderUtil::kPixelScale);
+        renderer->setColor(og_color);
+      } else {
+        HighlightPosition(x, y, {0.98f, 0.394f, 0.078f});
+      }
     }
     Ref<Piece> hover_piece =
         chess_board_->GetPiece(move_piece_x_, move_piece_y_);
@@ -256,17 +282,16 @@ void GameCanvas::DrawPiece(int x, int y) {
   if (index < 0) {
     return;
   }
-  int render_offset_x = (7 + x * 16) * RenderUtil::kPixelScale;
-  int render_offset_y = (6 + ConvertY(y) * 12 - piece_offset_) * RenderUtil::kPixelScale;
   if (animate_ && animate_move_piece_x_ == x && animate_move_piece_y_ == y) {
-    image.drawSub(board_pos_x + animate_from_pos_x_, board_pos_y + animate_from_pos_y_, // render pos
+    float t = std::min((game_time_ - animate_start_) / animate_duration_, 1.0);
+    animate_current_pos_x_ = Lerp(animate_from_pos_x_, animate_to_pos_x_, t);
+    animate_current_pos_y_ = Lerp(animate_from_pos_y_, animate_to_pos_y_, t);
+    image.drawSub(board_pos_x + animate_current_pos_x_, board_pos_y + animate_current_pos_y_, // render pos
                   16 * RenderUtil::kPixelScale, 32 * RenderUtil::kPixelScale, // render size
                   index * 16, index * 32, // image pos
                   16, 32 // image size
     );
-    animate_from_pos_x_ = Lerp(animate_from_pos_x_, animate_to_pos_x_, 0.15f);
-    animate_from_pos_y_ = Lerp(animate_from_pos_y_, animate_to_pos_y_, 0.15f);
-    if (std::abs(animate_to_pos_x_ - animate_from_pos_x_) < 0.02f && std::abs(animate_to_pos_y_ - animate_from_pos_y_) < 0.02f) {
+    if (t >= 1.0f) {
       animate_ = false;
     }
   } else if (ended_ && (piece->GetColor() == winner_color_ || winner_color_ == kPieceColorNone)) {
@@ -280,11 +305,71 @@ void GameCanvas::DrawPiece(int x, int y) {
                   (int) gRadToDeg(std::cos(dance_anim_time_ * 3) * 0.25f) // rotation
     );
   } else {
-    int start_offset = -fall_anim_dist_ * 800 * (x + 1);
-    image.drawSub(board_pos_x + render_offset_x, board_pos_y + render_offset_y + start_offset, // render pos
+    image.drawSub(board_pos_x + render_offset_x, board_pos_y + render_offset_y, // render pos
                   16 * RenderUtil::kPixelScale, 32 * RenderUtil::kPixelScale, // render size
                   index * 16, index * 32, // image pos
                   16, 32 // image size
+    );
+  }
+}
+
+void GameCanvas::DrawPieceAnimating(PieceType type, PieceColor color, int board_x, int board_y, int to_board_x, int to_board_y, float progress) {
+  float from_pos_x = (7 + board_x * 16) * RenderUtil::kPixelScale;
+  float from_pos_y = (6 + ConvertY(board_y) * 12 - piece_offset_) * RenderUtil::kPixelScale;
+  float to_pos_x = (7 + to_board_x * 16) * RenderUtil::kPixelScale;
+  float to_pos_y = (6 + ConvertY(to_board_y) * 12 - piece_offset_) * RenderUtil::kPixelScale;
+  float current_pos_x = Lerp(from_pos_x, to_pos_x, progress);
+  float current_pos_y = Lerp(from_pos_y, to_pos_y, progress);
+  auto& pieces = color == kPieceColorWhite ? white_pieces_ : black_pieces_;
+  int index = type - 1;
+  pieces.drawSub(board_pos_x + current_pos_x, board_pos_y + current_pos_y, // render pos
+                16 * RenderUtil::kPixelScale, 32 * RenderUtil::kPixelScale, // render size
+                index * 16, index * 32, // image pos
+                16, 32 // image size
+  );
+}
+
+void GameCanvas::DrawPieceAnimatingUnbound(PieceType type, PieceColor color, int x, int y, int to_board_x, int to_board_y, float progress) {
+  float to_pos_x = (7 + to_board_x * 16) * RenderUtil::kPixelScale;
+  float to_pos_y = (6 + ConvertY(to_board_y) * 12 - piece_offset_) * RenderUtil::kPixelScale;
+  float current_pos_x = Lerp(x, board_pos_x + to_pos_x, progress);
+  float current_pos_y = Lerp(y, board_pos_y + to_pos_y, progress);
+  auto& pieces = color == kPieceColorWhite ? white_pieces_ : black_pieces_;
+  int index = type - 1;
+  pieces.drawSub(current_pos_x, current_pos_y, // render pos
+                 16 * RenderUtil::kPixelScale, 32 * RenderUtil::kPixelScale, // render size
+                 index * 16, index * 32, // image pos
+                 16, 32 // image size
+  );
+}
+
+void GameCanvas::DrawPiece(PieceType type, PieceColor color, int x, int y, float scale) {
+  auto& pieces = color == kPieceColorWhite ? white_pieces_ : black_pieces_;
+  int index = type - 1;
+  pieces.drawSub(x, y, // render pos
+                16 * scale, 32 * scale, // render size
+                index * 16, index * 32, // image pos
+                16, 32 // image size
+  );
+}
+
+void GameCanvas::DrawOutline(PieceType type, int x, int y, float scale) {
+  int index = type - 1;
+  int offsets[16]{
+      -1,0,
+      0,-1,
+      1,0,
+      0,1,
+      0,-1,
+      -1,0,
+      0,1,
+      1,0
+  };
+  for (int i = 0; i < 16; i += 2) {
+    mask_pieces_.drawSub(x + (scale * offsets[i]), y + (scale * offsets[i + 1]), // render pos
+                   16 * scale, 32 * scale, // render size
+                   index * 16, index * 32, // image pos
+                   16, 32 // image size
     );
   }
 }
@@ -313,7 +398,11 @@ void GameCanvas::charPressed(unsigned int codepoint) {
 
 void GameCanvas::mouseMoved(int x, int y) {
   root_->SetCursorPos(x, y);
-  if (input_lock_ || promoting_ || connection_->GetCurrentTurn() != player_color_) {
+  if (promoting_) {
+    promote_screen_->OnMouseMoved(x, y);
+    return;
+  }
+  if (input_lock_ || connection_->GetCurrentTurn() != player_color_) {
     return;
   }
 //	gLogi("GameCanvas") << "mouseMoved" << ", x:" << x << ", y:" << y;
@@ -337,19 +426,27 @@ void GameCanvas::mouseDragged(int x, int y, int button) {
 //	gLogi("GameCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
   root_->SetCursorPos(x, y);
   root_->SetCursorType(CursorType::kHandClosed);
+  if (promoting_) {
+    promote_screen_->OnMouseMoved(x, y);
+    return;
+  }
 }
 
 void GameCanvas::mousePressed(int x, int y, int button) {
 //	gLogi("GameCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
   root_->SetCursorType(CursorType::kHandClosed);
+  if (promoting_) {
+    promote_screen_->OnMousePressed(x, y);
+  }
 }
 
 void GameCanvas::mouseReleased(int x, int y, int button) {
   root_->SetCursorType(CursorType::kArrow);
-  if (animate_ || input_lock_ || connection_->GetCurrentTurn() != player_color_) {
+  if (promoting_) {
+    promote_screen_->OnMouseReleased(x, y);
     return;
   }
-  if (promoting_) {
+  if (animate_ || input_lock_ || connection_->GetCurrentTurn() != player_color_) {
     return;
   }
 
@@ -380,7 +477,6 @@ void GameCanvas::mouseReleased(int x, int y, int button) {
     bool switch_turn = Move(move_piece_x_, move_piece_y_, hover_piece_x_, hover_piece_y_);
     connection_->Move(move_piece_x_, move_piece_y_, hover_piece_x_,
                       hover_piece_y_, switch_turn);
-
     ResetSelection();
   }
 }

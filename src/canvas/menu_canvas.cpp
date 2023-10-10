@@ -16,7 +16,7 @@ HostTask::HostTask(gApp* root) : root(root) {
   server = CreateRef<znet::Server>(config);
   completed = false;
   wait = false;
-  thread = CreateRef<std::thread>([&]() {
+  thread = CreateRef<std::thread>([&, root]() {
     znet::Result result;
     title = "Binding server...";
     if ((result = server->Bind()) != znet::Result::Success) {

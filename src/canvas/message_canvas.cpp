@@ -46,20 +46,24 @@ void MessageCanvas::charPressed(unsigned int codepoint) {
 
 void MessageCanvas::mouseMoved(int x, int y) {
   //	gLogi("gCanvas") << "mouseMoved" << ", x:" << x << ", y:" << y;
+  root->SetCursorPos(x, y);
   back_button->OnMouseMoved(x, y);
 }
 
 void MessageCanvas::mouseDragged(int x, int y, int button) {
   //	gLogi("gCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
+  root->SetCursorPos(x, y);
 }
 
 void MessageCanvas::mousePressed(int x, int y, int button) {
   //	gLogi("gCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
+  root->SetCursorType(CursorType::kHandClosed);
   back_button->OnMousePressed(x, y);
 }
 
 void MessageCanvas::mouseReleased(int x, int y, int button) {
   //	gLogi("gCanvas") << "mouseReleased" << ", button:" << button;
+  root->SetCursorType(CursorType::kArrow);
   back_button->OnMouseReleased(x, y);
 }
 

@@ -10,7 +10,7 @@ using znet::Ref;
 using znet::CreateRef;
 
 inline float Lerp(float a, float b, float t) {
-  return a + (b - a) * t;
+  return a + (b - a) * std::min(std::max(std::abs(t), 0.0f), 1.0f);
 }
 
 enum class ButtonState {
@@ -30,6 +30,7 @@ class RenderUtil {
 
   static void DrawButton(const std::string& text, int x, int y, int width, int height, ButtonState state = ButtonState::None);
   static void DrawProgress(int x, int y, int percentage, int width);
+  static void DrawRect(int x, int y, int width, int height);
 
   static int GetStringWidth(const std::string& text, bool bold = false) {
     return bold ? font_bold_->getStringWidth(text) : font_->getStringWidth(text);
@@ -46,4 +47,5 @@ class RenderUtil {
   static gImage* button_hover_;
   static gImage* button_pressed_;
   static gImage* progress_bar_;
+  static gImage* panel_;
 };

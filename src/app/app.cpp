@@ -6,9 +6,8 @@
 */
 
 #include "app.h"
-#include <loading_canvas.h>
-#include "game_canvas.h"
-#include "menu_canvas.h"
+#include "canvas/loading_canvas.h"
+#include "canvas/game_canvas.h"
 
 gApp::gApp() {
 }
@@ -26,6 +25,7 @@ void gApp::setup() {
   cursor_->setFiltering(2, 2);
   cursor_height_ = cursor_->getHeight();
   cursor_width_ = 16;
+  //auto* cnv = new GameCanvas(this, CreateRef<ChessConnectionDummy>(), nullptr);
   auto* cnv = new LoadingCanvas(this);
   appmanager->setCurrentCanvas(cnv);
   appmanager->getWindow()->setCursorMode(0x00034002); // GLFW_CURSOR_HIDDEN
