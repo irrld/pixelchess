@@ -45,7 +45,6 @@ void MenuCanvas::update() {
     root->setCurrentCanvas(new TaskCanvas(root, CreateRef<HostTask>(root)));
   } else if (join_button->GetState() == ButtonState::Pressed) {
     join_button->Lock();
-//    root->setCurrentCanvas(new TaskCanvas(root, CreateRef<JoinTask>(root, "127.0.0.1", 44025)));
     root->setCurrentCanvas(new JoinCanvas(root));
   } else if (quit_button->GetState() == ButtonState::Pressed) {
     quit_button->Lock();
@@ -73,20 +72,7 @@ void MenuCanvas::draw() {
   root->DrawCursor();
 }
 
-void MenuCanvas::keyPressed(int key) {
-  //	gLogi("gCanvas") << "keyPressed:" << key;
-}
-
-void MenuCanvas::keyReleased(int key) {
-  //	gLogi("gCanvas") << "keyReleased:" << key;
-}
-
-void MenuCanvas::charPressed(unsigned int codepoint) {
-  //	gLogi("gCanvas") << "charPressed:" << gCodepointToStr(codepoint);
-}
-
 void MenuCanvas::mouseMoved(int x, int y) {
-  //	gLogi("gCanvas") << "mouseMoved" << ", x:" << x << ", y:" << y;
   root->SetCursorPos(x, y);
   if (fade_in_) {
     return;
@@ -96,14 +82,7 @@ void MenuCanvas::mouseMoved(int x, int y) {
   quit_button->OnMouseMoved(x, y);
 }
 
-void MenuCanvas::mouseDragged(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
-  root->SetCursorPos(x, y);
-  root->SetCursorType(CursorType::kHandClosed);
-}
-
 void MenuCanvas::mousePressed(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
   root->SetCursorType(CursorType::kHandClosed);
   if (fade_in_) {
     return;
@@ -114,7 +93,6 @@ void MenuCanvas::mousePressed(int x, int y, int button) {
 }
 
 void MenuCanvas::mouseReleased(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mouseReleased" << ", button:" << button;
   root->SetCursorType(CursorType::kArrow);
   if (fade_in_) {
     return;
@@ -122,29 +100,5 @@ void MenuCanvas::mouseReleased(int x, int y, int button) {
   join_button->OnMouseReleased(x, y);
   host_button->OnMouseReleased(x, y);
   quit_button->OnMouseReleased(x, y);
-}
-
-void MenuCanvas::mouseScrolled(int x, int y) {
-  //	gLogi("gCanvas") << "mouseScrolled" << ", x:" << x << ", y:" << y;
-}
-
-void MenuCanvas::mouseEntered() {
-
-}
-
-void MenuCanvas::mouseExited() {
-
-}
-
-void MenuCanvas::windowResized(int w, int h) {
-
-}
-
-void MenuCanvas::showNotify() {
-
-}
-
-void MenuCanvas::hideNotify() {
-
 }
 

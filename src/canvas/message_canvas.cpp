@@ -31,61 +31,17 @@ void MessageCanvas::draw() {
   root->DrawCursor();
 }
 
-void MessageCanvas::keyPressed(int key) {
-  //	gLogi("gCanvas") << "keyPressed:" << key;
-}
-
-void MessageCanvas::keyReleased(int key) {
-  //	gLogi("gCanvas") << "keyReleased:" << key;
-}
-
-void MessageCanvas::charPressed(unsigned int codepoint) {
-  //	gLogi("gCanvas") << "charPressed:" << gCodepointToStr(codepoint);
-}
-
 void MessageCanvas::mouseMoved(int x, int y) {
-  //	gLogi("gCanvas") << "mouseMoved" << ", x:" << x << ", y:" << y;
   root->SetCursorPos(x, y);
   back_button->OnMouseMoved(x, y);
 }
 
-void MessageCanvas::mouseDragged(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
-  root->SetCursorPos(x, y);
-}
-
 void MessageCanvas::mousePressed(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
   root->SetCursorType(CursorType::kHandClosed);
   back_button->OnMousePressed(x, y);
 }
 
 void MessageCanvas::mouseReleased(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mouseReleased" << ", button:" << button;
   root->SetCursorType(CursorType::kArrow);
   back_button->OnMouseReleased(x, y);
-}
-
-void MessageCanvas::mouseScrolled(int x, int y) {
-  //	gLogi("gCanvas") << "mouseScrolled" << ", x:" << x << ", y:" << y;
-}
-
-void MessageCanvas::mouseEntered() {
-
-}
-
-void MessageCanvas::mouseExited() {
-
-}
-
-void MessageCanvas::windowResized(int w, int h) {
-
-}
-
-void MessageCanvas::showNotify() {
-
-}
-
-void MessageCanvas::hideNotify() {
-
 }

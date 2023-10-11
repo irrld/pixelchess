@@ -21,6 +21,8 @@ enum PieceColor : uint8_t {
   kPieceColorBlack
 };
 
+PieceColor GetOppositeColor(PieceColor color);
+
 using MoveFunction = std::function<bool(int, int, int, int, PieceColor)>;
 
 class Piece {

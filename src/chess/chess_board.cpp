@@ -59,7 +59,18 @@ bool ChessBoard::IsValidMove(int x, int y, int to_x, int to_y) {
   if (to_piece != nullptr && to_piece->GetColor() == piece->GetColor()) {
     return false;
   }
-  return piece->IsValidMove(x, y, to_x, to_y);
+  if (piece->IsValidMove(x, y, to_x, to_y)) {
+    if (piece->GetType() == kPieceTypeKing) {
+      SetPiece(to_x, to_y, piece);
+      SetPiece(x, y, nullptr);
+      auto state = CheckState(GetOppositeColor(piece->GetColor()));
+      SetPiece(x, y, piece);
+      SetPiece(to_x, to_y, to_piece);
+      return state == ChessState::Playing;
+    }
+    return true;
+  }
+  return false;
 }
 
 ChessState ChessBoard::CheckState(PieceColor current_turn) {
@@ -92,17 +103,24 @@ void ChessBoard::CreatePieces() {
         if (front_piece) {
           return false;
         }
+        if (double_jump && to_y == y + 2) {
+          // check if trying to jump over from a friendly piece
+          Ref<Piece> piece = GetPiece(to_x, y + 1);
+          if (piece && piece->GetColor() == team) {
+            return false;
+          }
+        }
         return true;
       }
       if (x - 1 == to_x && y + 1 == to_y) {
         Ref<Piece> left_piece = GetPiece(x - 1, y + 1);
-        if (left_piece != nullptr && left_piece->GetColor() != team) {
+        if (left_piece && left_piece->GetColor() != team) {
           return true;
         }
       }
       if (x + 1 == to_x && y + 1 == to_y) {
         Ref<Piece> right_piece = GetPiece(x + 1, y + 1);
-        if (right_piece != nullptr && right_piece->GetColor() != team) {
+        if (right_piece && right_piece->GetColor() != team) {
           return true;
         }
       }
@@ -113,17 +131,24 @@ void ChessBoard::CreatePieces() {
         if (front_piece) {
           return false;
         }
+        if (double_jump && to_y == y - 2) {
+          // check if trying to jump over from a friendly piece
+          Ref<Piece> piece = GetPiece(to_x, y - 1);
+          if (piece && piece->GetColor() == team) {
+            return false;
+          }
+        }
         return true;
       }
       if (x - 1 == to_x && y - 1 == to_y) {
         Ref<Piece> left_piece = GetPiece(x - 1, y - 1);
-        if (left_piece != nullptr && left_piece->GetColor() != team) {
+        if (left_piece && left_piece->GetColor() != team) {
           return true;
         }
       }
       if (x + 1 == to_x && y - 1 == to_y) {
         Ref<Piece> right_piece = GetPiece(x + 1, y - 1);
-        if (right_piece != nullptr && right_piece->GetColor() != team) {
+        if (right_piece && right_piece->GetColor() != team) {
           return true;
         }
       }

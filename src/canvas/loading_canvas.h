@@ -20,17 +20,19 @@ class LoadingCanvas : public gBaseCanvas {
   void keyPressed(int key);
   void keyReleased(int key);
   void charPressed(unsigned int codepoint);
-  void mouseMoved(int x, int y );
-  void mouseDragged(int x, int y, int button);
+  void mouseMoved(int x, int y);
+  void mouseDragged(int x, int y, int button) {
+    mouseMoved(x, y);
+  }
   void mousePressed(int x, int y, int button);
   void mouseReleased(int x, int y, int button);
-  void mouseScrolled(int x, int y);
-  void mouseEntered();
-  void mouseExited();
-  void windowResized(int w, int h);
+  void mouseScrolled(int x, int y) {}
+  void mouseEntered() {}
+  void mouseExited() {}
+  void windowResized(int w, int h) {}
 
-  void showNotify();
-  void hideNotify();
+  void showNotify() {}
+  void hideNotify() {}
 
  private:
   gApp* root;

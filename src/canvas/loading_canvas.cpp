@@ -51,55 +51,21 @@ void LoadingCanvas::draw() {
 }
 
 void LoadingCanvas::keyPressed(int key) {
-  //	gLogi("gCanvas") << "keyPressed:" << key;
 }
 
 void LoadingCanvas::keyReleased(int key) {
-  //	gLogi("gCanvas") << "keyReleased:" << key;
   delta_ = 6;
 }
 
 void LoadingCanvas::charPressed(unsigned int codepoint) {
-  //	gLogi("gCanvas") << "charPressed:" << gCodepointToStr(codepoint);
 }
 
 void LoadingCanvas::mouseMoved(int x, int y) {
-  //	gLogi("gCanvas") << "mouseMoved" << ", x:" << x << ", y:" << y;
-}
-
-void LoadingCanvas::mouseDragged(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
 }
 
 void LoadingCanvas::mousePressed(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
 }
 
 void LoadingCanvas::mouseReleased(int x, int y, int button) {
-  //	gLogi("gCanvas") << "mouseReleased" << ", button:" << button;
   delta_ = 6;
-}
-
-void LoadingCanvas::mouseScrolled(int x, int y) {
-  //	gLogi("gCanvas") << "mouseScrolled" << ", x:" << x << ", y:" << y;
-}
-
-void LoadingCanvas::mouseEntered() {
-
-}
-
-void LoadingCanvas::mouseExited() {
-
-}
-
-void LoadingCanvas::windowResized(int w, int h) {
-
-}
-
-void LoadingCanvas::showNotify() {
-
-}
-
-void LoadingCanvas::hideNotify() {
-
 }

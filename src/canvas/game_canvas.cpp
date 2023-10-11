@@ -394,15 +394,12 @@ void GameCanvas::ResetSelection() {
 }
 
 void GameCanvas::keyPressed(int key) {
-//	gLogi("GameCanvas") << "keyPressed:" << key;
 }
 
 void GameCanvas::keyReleased(int key) {
-//	gLogi("GameCanvas") << "keyReleased:" << key;
 }
 
 void GameCanvas::charPressed(unsigned int codepoint) {
-//	gLogi("GameCanvas") << "charPressed:" << gCodepointToStr(codepoint);
 }
 
 void GameCanvas::mouseMoved(int x, int y) {
@@ -431,17 +428,7 @@ void GameCanvas::mouseMoved(int x, int y) {
   }
 }
 
-void GameCanvas::mouseDragged(int x, int y, int button) {
-//	gLogi("GameCanvas") << "mouseDragged" << ", x:" << x << ", y:" << y << ", b:" << button;
-  root_->SetCursorPos(x, y);
-  root_->SetCursorType(CursorType::kHandClosed);
-  if (promoting_) {
-    promote_screen_->OnMouseMoved(x, y);
-  }
-}
-
 void GameCanvas::mousePressed(int x, int y, int button) {
-//	gLogi("GameCanvas") << "mousePressed" << ", x:" << x << ", y:" << y << ", b:" << button;
   root_->SetCursorType(CursorType::kHandClosed);
   if (promoting_) {
     promote_screen_->OnMousePressed(x, y);
@@ -494,26 +481,6 @@ void GameCanvas::mouseReleased(int x, int y, int button) {
 void GameCanvas::SetInfoText(const std::string& text) {
   next_info_text_ = text;
   has_next_text_ = true;
-}
-
-void GameCanvas::mouseScrolled(int x, int y) {
-
-}
-
-void GameCanvas::mouseEntered() {
-
-}
-
-void GameCanvas::mouseExited() {
-
-}
-
-void GameCanvas::windowResized(int w, int h) {
-
-}
-
-void GameCanvas::showNotify() {
-
 }
 
 void GameCanvas::hideNotify() {
