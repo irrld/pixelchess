@@ -17,9 +17,17 @@
 #include "app.h"
 #include "gAppManager.h"
 
-int main(int argc, char **argv) {
+#ifdef WIN32
+#include <windows.h>
 
-	gStartEngine(new gApp(argc, argv), "Chess Tacos", G_WINDOWMODE_APP, 1280, 720);
-
-	return 0;
+int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nFunsterStil) {
+  gStartEngine(new gApp(), "Chess Tacos (Windows)", G_WINDOWMODE_APP, 1280, 720);
+  return 0;
 }
+#else
+int main(int argc, char **argv) {
+  gStartEngine(new gApp(argc, argv), "Chess Tacos", G_WINDOWMODE_APP, 1280, 720);
+  return 0;
+}
+#endif
+
