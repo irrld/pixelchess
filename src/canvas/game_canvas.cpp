@@ -1,4 +1,5 @@
 #include "game_canvas.h"
+#include <color.h>
 #include "message_canvas.h"
 
 GameCanvas::GameCanvas(gApp* root, Ref<ChessConnection> connection, Ref<std::thread> thread) : gBaseCanvas(root), root_(root), connection_(connection), thread_(thread) {
@@ -112,7 +113,7 @@ void GameCanvas::UpdateInfoText() {
   if (has_next_text_) {
     info_text_ = next_info_text_;
     info_pos_x_ = getWidth() / 2;
-    info_pos_y_ = board_pos_y + board_height_ + 50;
+    info_pos_y_ = board_pos_y + board_height_ + 25;
     has_next_text_ = false;
   }
 }
@@ -128,7 +129,7 @@ void GameCanvas::draw() {
   root_->DrawCursor();
 }
 
-void GameCanvas::HighlightPosition(int board_x, int board_y, const gColor& color) {
+void GameCanvas::HighlightPosition(int board_x, int board_y, const RGB& color) {
   int render_offset_x = (7 + board_x * 16) * RenderUtil::kPixelScale;
   int render_offset_y = (6 + ConvertY(board_y) * 12) * RenderUtil::kPixelScale;
   const gColor& og_color = renderer->getColor();
@@ -242,11 +243,11 @@ void GameCanvas::DrawPiece(int x, int y) {
     if (!show_moves_) {
       if (piece && (!animate_ || (animate_move_piece_x_ != x && animate_move_piece_y_ != y))) {
         const gColor& og_color = renderer->getColor();
-        renderer->setColor(0.0f, 0.545f, 0.796f);
+        renderer->setColor(8, 176, 189);
         DrawOutline(piece->GetType(), board_pos_x + render_offset_x, board_pos_y + render_offset_y, RenderUtil::kPixelScale);
         renderer->setColor(og_color);
       } else {
-        HighlightPosition(x, y, {0.0f, 0.545f, 0.796f});
+        HighlightPosition(x, y, CreateRGB(8, 176, 189));
       }
     }
   }
@@ -254,11 +255,11 @@ void GameCanvas::DrawPiece(int x, int y) {
     if (move_piece_x_ == x && move_piece_y_ == y) {
       if (piece && (!animate_ || (animate_move_piece_x_ != x && animate_move_piece_y_ != y))) {
         const gColor& og_color = renderer->getColor();
-        renderer->setColor(0.98f, 0.394f, 0.078f);
+        renderer->setColor(250, 100, 20);
         DrawOutline(piece->GetType(), board_pos_x + render_offset_x, board_pos_y + render_offset_y, RenderUtil::kPixelScale);
         renderer->setColor(og_color);
       } else {
-        HighlightPosition(x, y, {0.98f, 0.394f, 0.078f});
+        HighlightPosition(x, y, CreateRGB(250, 100, 20));
       }
     }
     Ref<Piece> hover_piece =
@@ -266,9 +267,9 @@ void GameCanvas::DrawPiece(int x, int y) {
     if (hover_piece) {
       if (chess_board_->IsValidMove(move_piece_x_, move_piece_y_, x, y)) {
         if (hover_piece_x_ == x && hover_piece_y_ == y && hover_piece->GetColor() == connection_->GetCurrentTurn()) {
-          HighlightPosition(x, y, {0.3f, 0 / 255.0f, 203 / 255.0f});
+          HighlightPosition(x, y, CreateRGB(6, 142, 153));
         } else {
-          HighlightPosition(x, y, {0.0f, 139 / 255.0f, 203 / 255.0f});
+          HighlightPosition(x, y, CreateRGB(8, 176, 189));
         }
       }
     }
@@ -353,8 +354,16 @@ void GameCanvas::DrawPiece(PieceType type, PieceColor color, int x, int y, float
   );
 }
 
-void GameCanvas::DrawOutline(PieceType type, int x, int y, float scale) {
+void GameCanvas::DrawOutline(PieceType type, int x, int y, float scale, bool outline) {
   int index = type - 1;
+  if (!outline) {
+    mask_pieces_.drawSub(x, y, // render pos
+                         16 * scale, 32 * scale, // render size
+                         index * 16, index * 32, // image pos
+                         16, 32 // image size
+    );
+    return;
+  }
   int offsets[16]{
       -1,0,
       0,-1,
@@ -417,7 +426,7 @@ void GameCanvas::mouseMoved(int x, int y) {
   hover_piece_x_ = piece_x;
   hover_piece_y_ = piece_y;
   Ref<Piece> piece = chess_board_->GetPiece(hover_piece_x_, hover_piece_y_);
-  if (!show_moves_ && piece != nullptr && piece->GetColor() != player_color_) {
+  if (!show_moves_ && piece && piece->GetColor() != player_color_) {
     ResetSelection();
   }
 }
@@ -428,7 +437,6 @@ void GameCanvas::mouseDragged(int x, int y, int button) {
   root_->SetCursorType(CursorType::kHandClosed);
   if (promoting_) {
     promote_screen_->OnMouseMoved(x, y);
-    return;
   }
 }
 
@@ -477,6 +485,8 @@ void GameCanvas::mouseReleased(int x, int y, int button) {
     bool switch_turn = Move(move_piece_x_, move_piece_y_, hover_piece_x_, hover_piece_y_);
     connection_->Move(move_piece_x_, move_piece_y_, hover_piece_x_,
                       hover_piece_y_, switch_turn);
+    ResetSelection();
+  } else if (!was_show_moves && piece && piece->GetColor() != player_color_) {
     ResetSelection();
   }
 }

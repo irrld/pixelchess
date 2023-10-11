@@ -25,18 +25,18 @@ class RenderUtil {
 
   static void Setup();
 
-  static void DrawFont(const std::string& text, int x, int y, const gColor& color = {1.0f, 1.0f, 1.0f}, bool bold = false);
-  static void DrawFont(gFont* render_font, const std::string& text, int x, int y, const gColor& color = {1.0f, 1.0f, 1.0f});
+  static void DrawFont(const std::string& text, int x, int y, const gColor& color = {1.0f, 1.0f, 1.0f}, bool bold = true, bool absolute = false);
+  static void DrawFont(gFont* render_font, const std::string& text, int x, int y, int shadow_distance, const gColor& color = {1.0f, 1.0f, 1.0f});
 
   static void DrawButton(const std::string& text, int x, int y, int width, int height, ButtonState state = ButtonState::None);
   static void DrawProgress(int x, int y, int percentage, int width);
   static void DrawRect(int x, int y, int width, int height);
 
-  static int GetStringWidth(const std::string& text, bool bold = false) {
+  static int GetStringWidth(const std::string& text, bool bold = true) {
     return bold ? font_bold_->getStringWidth(text) : font_->getStringWidth(text);
   }
 
-  static int GetStringHeight(const std::string& text, bool bold = false) {
+  static int GetStringHeight(const std::string& text, bool bold = true) {
     return bold ? font_bold_->getStringHeight(text) : font_->getStringHeight(text);
   }
 

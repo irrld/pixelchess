@@ -31,26 +31,24 @@ void RenderUtil::Setup() {
   panel_->setFiltering(2, 2);
 }
 
-void RenderUtil::DrawFont(const std::string& text, int x, int y, const gColor& color, bool bold) {
+void RenderUtil::DrawFont(const std::string& text, int x, int y, const gColor& color, bool bold, bool absolute) {
   auto*& render_font = bold ? font_bold_ : font_;
-  DrawFont(render_font, text, x - render_font->getStringWidth(text) / 2.0f, y - render_font->getStringHeight(text) / 2.0f, color);
+  DrawFont(render_font, text, x - (absolute ? 0.0f : render_font->getStringWidth(text) / 2.0f), y + render_font->getStringHeight("A"), 3, color);
 }
 
-void RenderUtil::DrawFont(gFont* render_font, const std::string& text, int x, int y, const gColor& color) {
+void RenderUtil::DrawFont(gFont* render_font, const std::string& text, int x, int y, int shadow_distance, const gColor& color) {
   const gColor& og_color = gRenderObject::getRenderer()->getColor();
   gRenderObject::getRenderer()->setColor({color.r - color.r / 2.0f, color.g - color.g / 2.0f, color.b - color.b / 2.0f, og_color.a});
-  render_font->drawText(text, x, y + render_font->getStringHeight(text) / 6.5f);
+  render_font->drawText(text, x, y + shadow_distance);
   gRenderObject::getRenderer()->setColor({color.r, color.g, color.b, og_color.a});
   render_font->drawText(text, x, y);
   gRenderObject::getRenderer()->setColor(og_color);
 }
 
 void RenderUtil::DrawButton(const std::string& text, int x, int y, int width, int height, ButtonState state) {
-  //    int width = GetStringWidth(text) + 8 * kPixelScale;
-  //    int height = GetStringHeight(text) + 8 * kPixelScale;
   auto*& button = state == ButtonState::Pressed ? button_pressed_ : state == ButtonState::Hover ? button_hover_ : button_;
   button->draw(x - width / 2.0f, y - height / 2.0f, width, height);
-  DrawFont(text, x - 3, y + (2 * kPixelScale) + (state == ButtonState::Pressed ? kPixelScale : 0.0f), {0xeb / 255.0f, 0xef / 255.0f, 0xf6 / 255.0f});
+  DrawFont(text, x - 3, y - height / 2.0f + 8, {0xeb / 255.0f, 0xef / 255.0f, 0xf6 / 255.0f});
 }
 
 void RenderUtil::DrawProgress(int x, int y, int percentage, int width) {

@@ -27,7 +27,7 @@ void LoadingCanvas::update() {
 }
 
 void LoadingCanvas::draw() {
-  clearColor(0x1c, 0x1e, 0x25);
+  clearColor(CreateRGB(0x1c1e25));
   const gColor& old_color = renderer->getColor();
   if (delta_ < 3) {
     int opacity = delta_ * delta_ * 255;
@@ -56,6 +56,7 @@ void LoadingCanvas::keyPressed(int key) {
 
 void LoadingCanvas::keyReleased(int key) {
   //	gLogi("gCanvas") << "keyReleased:" << key;
+  delta_ = 6;
 }
 
 void LoadingCanvas::charPressed(unsigned int codepoint) {
@@ -76,6 +77,7 @@ void LoadingCanvas::mousePressed(int x, int y, int button) {
 
 void LoadingCanvas::mouseReleased(int x, int y, int button) {
   //	gLogi("gCanvas") << "mouseReleased" << ", button:" << button;
+  delta_ = 6;
 }
 
 void LoadingCanvas::mouseScrolled(int x, int y) {

@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <color.h>
 #include <net/chess_connection.h>
 #include "app/app.h"
 #include "chess/chess_board.h"
@@ -33,7 +34,7 @@ class GameCanvas : public gBaseCanvas {
   void showNotify();
   void hideNotify();
 
-  void HighlightPosition(int board_x, int board_y, const gColor& color);
+  void HighlightPosition(int board_x, int board_y, const RGB& color);
   bool Move(int x, int y, int to_x, int to_y);
   void DrawBoard();
   void DrawInfoText();
@@ -42,7 +43,7 @@ class GameCanvas : public gBaseCanvas {
   void DrawPieceAnimating(PieceType type, PieceColor color, int board_x, int board_y, int to_board_x, int to_board_y, float progress);
   void DrawPieceAnimatingUnbound(PieceType type, PieceColor color, int x, int y, int to_board_x, int to_board_y, float progress);
   void DrawPiece(PieceType type, PieceColor color, int x, int y, float scale);
-  void DrawOutline(PieceType type, int x, int y, float scale);
+  void DrawOutline(PieceType type, int x, int y, float scale, bool outline = true);
   int ConvertY(int y);
   void ResetSelection();
 

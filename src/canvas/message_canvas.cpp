@@ -12,7 +12,6 @@ void MessageCanvas::setup() {
   int buttons_x = getWidth() / 2;
   int buttons_y = getHeight() / 2 + 150;
   back_button = new Button("BACK", buttons_x, buttons_y, 180, 60);
-
 }
 
 void MessageCanvas::update() {
