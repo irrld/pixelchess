@@ -156,7 +156,6 @@ bool GameCanvas::Move(int x, int y, int to_x, int to_y) {
   if (piece->GetType() == kPieceTypePawn) {
     if (to_y == 0 && piece->GetColor() == kPieceColorBlack) {
       // black promote
-      // promote after switch
       if (player_color_ == kPieceColorBlack) {
         SetInfoText("Promote your pawn!");
         promoting_ = true;
@@ -172,7 +171,6 @@ bool GameCanvas::Move(int x, int y, int to_x, int to_y) {
       }
     } else if (to_y == 7 && piece->GetColor() == kPieceColorWhite) {
       // white promote
-      // promote after switch
       if (player_color_ == kPieceColorWhite) {
         SetInfoText("Promote your pawn!");
         promoting_ = true;

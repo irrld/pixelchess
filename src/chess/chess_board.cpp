@@ -60,15 +60,12 @@ bool ChessBoard::IsValidMove(int x, int y, int to_x, int to_y) {
     return false;
   }
   if (piece->IsValidMove(x, y, to_x, to_y)) {
-    if (piece->GetType() == kPieceTypeKing) {
-      SetPiece(to_x, to_y, piece);
-      SetPiece(x, y, nullptr);
-      auto state = CheckState(GetOppositeColor(piece->GetColor()));
-      SetPiece(x, y, piece);
-      SetPiece(to_x, to_y, to_piece);
-      return state == ChessState::Playing;
-    }
-    return true;
+    SetPiece(to_x, to_y, piece);
+    SetPiece(x, y, nullptr);
+    auto state = CheckState(GetOppositeColor(piece->GetColor()));
+    SetPiece(x, y, piece);
+    SetPiece(to_x, to_y, to_piece);
+    return state == ChessState::Playing;
   }
   return false;
 }

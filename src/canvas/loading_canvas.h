@@ -35,7 +35,7 @@ class LoadingCanvas : public gBaseCanvas {
   void hideNotify() {}
 
  private:
-  gApp* root;
+  gApp* root_;
   gImage brand_logo_;
   int brand_width_, brand_height_, brand_x_, brand_y_;
   gImage glist_logo_;

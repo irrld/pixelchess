@@ -40,11 +40,11 @@ class MenuCanvas : public gBaseCanvas {
   void hideNotify() {}
 
  private:
-  gApp* root;
-  Button* join_button;
-  Button* host_button;
-  Button* quit_button;
-  gFont logo_font;
+  gApp* root_;
+  Button* join_button_;
+  Button* host_button_;
+  Button* quit_button_;
+  gFont logo_font_;
   bool fade_in_;
   RGB fade_color_;
   RGB back_color_;

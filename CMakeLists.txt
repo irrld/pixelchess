@@ -25,8 +25,12 @@ endif()
 # Clang compiler definition for Windows. Do not change this value for other OS.
 # For UNIX like systems, configure the compiler via OS commands.
 if(WIN32)
-	set(CMAKE_C_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang.exe")
-	set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang++.exe")
+    if(NOT DEFINED CMAKE_C_COMPILER)
+    	set(CMAKE_C_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang.exe")
+    endif()
+    if(NOT DEFINED CMAKE_CXX_COMPILER)
+    	set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang++.exe")
+    endif()
 endif(WIN32)
 
 
@@ -65,7 +69,9 @@ set(APP_DIR ${CMAKE_SOURCE_DIR})
 project (${APP_NAME})
 set(CMAKE_BUILD_TYPE Debug)
 
-set(TOP_DIR ${APP_DIR}/../..)
+if(NOT DEFINED TOP_DIR)
+    set(TOP_DIR ${APP_DIR}/../..)
+endif()
 set(MAIN_DIR ${TOP_DIR}/GlistEngine)
 set(ENGINE_DIR ${MAIN_DIR}/engine)
 

@@ -2,7 +2,7 @@
 #include "menu_canvas.h"
 
 LoadingCanvas::LoadingCanvas(gApp* root) : gBaseCanvas(root) {
-  this->root = root;
+  this->root_ = root;
 }
 
 LoadingCanvas::~LoadingCanvas() {
@@ -45,7 +45,7 @@ void LoadingCanvas::draw() {
     renderer->setColor(255, 255, 255, std::min(opacity, 255));
     glist_logo_.draw(glist_x_, glist_y_, glist_width_, glist_height_);
   } else {
-    root->setCurrentCanvas(new MenuCanvas(root));
+    root_->setCurrentCanvas(new MenuCanvas(root_));
   }
   renderer->setColor(old_color);
 }
