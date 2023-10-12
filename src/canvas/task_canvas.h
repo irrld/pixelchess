@@ -40,4 +40,5 @@ class TaskCanvas : public gBaseCanvas {
   std::string title;
   Ref<Task> task;
   gImage white_pieces;
+  Button* button_;
 };

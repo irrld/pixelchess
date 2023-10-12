@@ -3,33 +3,29 @@
 #include "canvas/game_canvas.h"
 
 
-HostTask::HostTask(gApp* root) : root(root) {
-  title = "Creating server...";
-  znet::ServerConfig config{"127.0.0.1", 44025};
-  server = CreateRef<znet::Server>(config);
-  completed = false;
-  wait = false;
-  thread = CreateRef<std::thread>([&, root]() {
+HostTask::HostTask(gApp* root) : root_(root) {
+  title_ = "Creating server...";
+  znet::ServerConfig config{"", 44025};
+  server_ = CreateRef<znet::Server>(config);
+  completed_ = false;
+  thread_ = CreateRef<std::thread>([&, root]() {
     znet::Result result;
-    title = "Binding server...";
-    if ((result = server->Bind()) != znet::Result::Success) {
-      wait = true;
+    title_ = "Binding server...";
+    if ((result = server_->Bind()) != znet::Result::Success) {
       gLogi("HostTask") << "Failed to bind server! Result: " << (int) result;
       root->setCurrentCanvas(new MessageCanvas(root, "Failed to bind server!"));
       return;
     }
-    title = "Waiting for opponent...";
-    connection = CreateRef<ChessConnectionLocal>(server);
-    connection->SetOnConnect([this]() {
-      completed = true;
+    title_ = "Waiting for opponent...";
+    connection_ = CreateRef<ChessConnectionLocal>(server_);
+    connection_->SetOnConnect([this]() { completed_ = true;
     });
-    connection->SetOnOpponentDisconnect([root]() {
+    connection_->SetOnOpponentDisconnect([root]() {
       // changing the canvas will close and cleanup the server
       // no need to do here
       root->setCurrentCanvas(new MessageCanvas(root, "Opponent disconnected from the game!"));
     });
-    if ((result = server->Listen()) != znet::Result::Completed) {
-      wait = true;
+    if ((result = server_->Listen()) != znet::Result::Completed) {
       gLogi("HostTask") << "Failed to listen server! Result: " << (int) result;
       root->setCurrentCanvas(new MessageCanvas(root, "Failed to listen server!"));
       return;
@@ -38,19 +34,38 @@ HostTask::HostTask(gApp* root) : root(root) {
 }
 
 HostTask::~HostTask() {
-  if (wait) {
-    if (thread && thread->joinable()) {
-      thread->join();
-    }
-  }
+  Cleanup();
 }
 
 bool HostTask::Update() {
-  if (completed) {
-    root->setCurrentCanvas(new GameCanvas(root, connection, thread));
-    completed = false;
+  if (completed_) {
+    root_->setCurrentCanvas(new GameCanvas(root_, connection_, thread_));
+    was_completed_ = true;
+    completed_ = false;
+    // we handed over the server to the game canvas
+    // remove the references so the connection won't get closed
+    server_ = nullptr;
+    connection_ = nullptr;
+    thread_ = nullptr;
   }
-  return completed;
+  return completed_;
+}
+
+bool HostTask::CanStop() {
+  return !was_completed_ && !completed_;
+}
+
+void HostTask::Stop() {
+  Cleanup();
+}
+
+void HostTask::Cleanup() {
+  if (server_) {
+    server_->Stop();
+  }
+  if (thread_ && thread_->joinable()) {
+    thread_->join();
+  }
 }
 
 Ref<Task> HostTask::Next() {
@@ -58,31 +73,28 @@ Ref<Task> HostTask::Next() {
 }
 
 const std::string& HostTask::GetTitle() {
-  return title;
+  return title_;
 }
 
-JoinTask::JoinTask(gApp* root, std::string host, int port) : root(root), host(host), port(port) {
+JoinTask::JoinTask(gApp* root, std::string host, int port) : root_(root), host_(host), port_(port) {
   znet::ClientConfig config{host, port};
   client_ = CreateRef<znet::Client>(config);
-  completed = false;
-  wait = false;
+  completed_ = false;
   thread_ = CreateRef<std::thread>([root, host, port, this]() {
-    connection = CreateRef<ChessConnectionNetwork>(client_);
-    connection->SetOnConnect([this]() {
-      title = "Loading the board...";
-      completed = true;
+    connection_ = CreateRef<ChessConnectionNetwork>(client_);
+    connection_->SetOnConnect([this]() {
+      title_ = "Loading the board...";
+      completed_ = true;
     });
-    title = "Connecting to " + host + ":" + std::to_string(port) + "...";
+    title_ = "Connecting to " + host + ":" + std::to_string(port) + "...";
     znet::Result result;
     if ((result = client_->Bind()) != znet::Result::Success) {
-      wait = true;
       gLogi("HostTask") << "Failed to bind client! Result: " << (int) result;
       root->setCurrentCanvas(new MessageCanvas(root, "Failed to bind client!"));
       return;
     }
     result = client_->Connect();
     if (result != znet::Result::Completed) {
-      wait = true;
       gLogi("HostTask") << "Failed to connect to the server! Result: " << (int) result;
       root->setCurrentCanvas(new MessageCanvas(root, "Failed to connect to the server!"));
       return;
@@ -92,23 +104,42 @@ JoinTask::JoinTask(gApp* root, std::string host, int port) : root(root), host(ho
 }
 
 JoinTask::~JoinTask() {
-  if (wait) {
-    if (thread_ && thread_->joinable()) {
-      thread_->join();
-    }
-  }
+  Cleanup();
 }
 
 bool JoinTask::Update() {
-  if (completed) {
+  if (completed_) {
     // wait until board data arrives
-    if (!connection->GetBoardData()) {
+    if (!connection_->GetBoardData()) {
       return false;
     }
-    root->setCurrentCanvas(new GameCanvas(root, connection, thread_));
-    completed = false;
+    root_->setCurrentCanvas(new GameCanvas(root_, connection_, thread_));
+    was_completed_ = true;
+    completed_ = false;
+    // we handed over the server to the game canvas
+    // remove the references so the connection won't get closed
+    client_ = nullptr;
+    connection_ = nullptr;
+    thread_ = nullptr;
   }
-  return completed;
+  return completed_;
+}
+
+bool JoinTask::CanStop() {
+  return !was_completed_ && !completed_;
+}
+
+void JoinTask::Stop() {
+  Cleanup();
+}
+
+void JoinTask::Cleanup() {
+  if (client_) {
+    client_->Disconnect();
+  }
+  if (thread_ && thread_->joinable()) {
+    thread_->join();
+  }
 }
 
 Ref<Task> JoinTask::Next() {
@@ -116,5 +147,5 @@ Ref<Task> JoinTask::Next() {
 }
 
 const std::string& JoinTask::GetTitle() {
-  return title;
+  return title_;
 }

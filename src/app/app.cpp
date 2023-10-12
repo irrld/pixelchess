@@ -7,7 +7,6 @@
 
 #include "app.h"
 #include "canvas/loading_canvas.h"
-#include "canvas/game_canvas.h"
 
 gApp::gApp() {
 }
