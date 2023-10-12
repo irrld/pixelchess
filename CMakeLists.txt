@@ -103,9 +103,16 @@ set(GlistApp_SOURCES
         ${APP_DIR}/src/net/chess_connection.cpp
 )
 
-add_executable(${APP_NAME}
-		${GlistApp_SOURCES}
-)
+
+if(WIN32 AND DEBUG)
+    add_executable(${APP_NAME} WIN32
+            ${GlistApp_SOURCES}
+    )
+else()
+    add_executable(${APP_NAME}
+            ${GlistApp_SOURCES}
+    )
+endif(WIN32 AND DEBUG)
 
 set_target_properties(
     ${APP_NAME}
