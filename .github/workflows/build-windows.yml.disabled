@@ -22,16 +22,35 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+#      path: ${{github.workspace}}/glist/myglistapps/${{github.repository}}
 
     - name: checkout submodule
       run: |
         git submodule update --init --recursive
 
       #working-directory: ${{github.workspace}}/glist/myglistapps/${{github.repository}}
-    - name: Set path
+    #- name: Set path
+    #  run: |
+    #    Add-Content $env:GITHUB_PATH "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/clang64/bin"
+    #    Add-Content $env:GITHUB_PATH "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/CMake/bin"
+
+    - name: Set path 2
       run: |
-        Add-Content $env:GITHUB_PATH "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/clang64/bin"
-        Add-Content $env:GITHUB_PATH "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/CMake/bin"
+        echo "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/clang64/bin" >> $GITHUB_PATH
+        echo "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/CMake/bin" >> $GITHUB_PATH
+        echo "C:/Windows/System32" >> $GITHUB_PATH
+        echo "C:/Windows" >> $GITHUB_PATH
+      shell: powershell
+
+    - name: Debug PATH
+      run: echo $PATH > path.txt
+      shell: powershell
+
+    - name: Upload PATH File
+      uses: actions/upload-artifact@v2
+      with:
+        name: path-debug
+        path: path.txt
 
     - name: Clone GlistEngine
       uses: GuillaumeFalourd/clone-github-repo-action@v2.2
@@ -58,18 +77,22 @@ jobs:
         7z l "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64-2.0.2.zip"
         7z x "D:/a/chesstacos/chesstacos/zbin/glistzbin-win64-2.0.2.zip" -o"D:/a/chesstacos/chesstacos/zbin"
 
-    - name: List
+    #- name: List
+    #  run: |
+    #    cd ${{github.workspace}}
+    #    tree /f
+
+    - name: Set up Ninja
       run: |
-        cd ${{github.workspace}}
-        tree /f
+        choco install ninja
+        ls "C:/ProgramData/chocolatey/bin"
+        ls "C:/Windows/System32"
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B '${{github.workspace}}/build' -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTOP_DIR='D:/a/chesstacos/chesstacos' -S .
+      run: cmake -B "D:/a/chesstacos/chesstacos/build" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTOP_DIR="D:/a/chesstacos/chesstacos" -DCMAKE_C_COMPILER="D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/clang64/bin/clang.exe" -DCMAKE_CXX_COMPILER="D:/a/chesstacos/chesstacos/zbin/glistzbin-win64/clang64/bin/clang++.exe" -DCMAKE_MAKE_PROGRAM="C:/ProgramData/chocolatey/bin/ninja.exe" -G "Ninja" -S .
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build '${{github.workspace}}/build' --config ${{env.BUILD_TYPE}}
+      run: cmake --build "D:/a/chesstacos/chesstacos/build" --config ${{env.BUILD_TYPE}}
 
 
