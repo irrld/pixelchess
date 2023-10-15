@@ -12,6 +12,7 @@ MenuCanvas::~MenuCanvas() {
 }
 
 void MenuCanvas::setup() {
+  enableAlphaBlending();
   int buttons_x = getWidth() / 2;
   int buttons_y = getHeight() / 2 + 100;
   join_button_ = new Button("JOIN", buttons_x, buttons_y, 180, 60);
@@ -67,8 +68,8 @@ void MenuCanvas::draw() {
   quit_button_->Draw();
   // logo
   RenderUtil::DrawFont(&logo_font_, "Chess Tacos", getWidth() / 2 - logo_font_.getStringWidth("Chess Tacos") / 2, 150, 8);
+  RenderUtil::DrawFont(RenderUtil::font_, kVersion, 0, getHeight() - 10, 0, {1.0f, 1.0f, 1.0f, 0.8f});
   setColor(og_color);
-  RenderUtil::DrawFont(RenderUtil::font_, kVersion, 0, getHeight() - 10, 0, {100, 100, 100});
   root_->DrawCursor();
 }
 
