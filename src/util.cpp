@@ -38,8 +38,10 @@ void RenderUtil::DrawFont(const std::string& text, int x, int y, const gColor& c
 
 void RenderUtil::DrawFont(gFont* render_font, const std::string& text, int x, int y, int shadow_distance, const gColor& color) {
   const gColor& og_color = gRenderObject::getRenderer()->getColor();
-  gRenderObject::getRenderer()->setColor({color.r - color.r / 2.0f, color.g - color.g / 2.0f, color.b - color.b / 2.0f, og_color.a});
-  render_font->drawText(text, x, y + shadow_distance);
+  if (shadow_distance > 0) {
+    gRenderObject::getRenderer()->setColor({color.r - color.r / 2.0f, color.g - color.g / 2.0f, color.b - color.b / 2.0f, og_color.a});
+    render_font->drawText(text, x, y + shadow_distance);
+  }
   gRenderObject::getRenderer()->setColor({color.r, color.g, color.b, og_color.a});
   render_font->drawText(text, x, y);
   gRenderObject::getRenderer()->setColor(og_color);

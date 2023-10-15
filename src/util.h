@@ -40,7 +40,6 @@ class RenderUtil {
     return bold ? font_bold_->getStringHeight(text) : font_->getStringHeight(text);
   }
 
- private:
   static gFont* font_;
   static gFont* font_bold_;
   static gImage* button_;
