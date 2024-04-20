@@ -21,12 +21,14 @@
 #include <windows.h>
 
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nFunsterStil) {
-  gStartEngine(new gApp(), "Chess Tacos (Windows)", G_WINDOWMODE_APP, 1280, 720);
+  gStartEngine(new gApp(), "Pixel Chess (Windows)", G_WINDOWMODE_APP, 1280, 720);
   return 0;
 }
 #else
+
+
 int main(int argc, char **argv) {
-  gStartEngine(new gApp(argc, argv), "Chess Tacos", G_WINDOWMODE_APP, 1280, 720);
+  gStartEngine(new gApp(argc, argv), "Pixel Chess", G_WINDOWMODE_APP, 1280, 720);
   return 0;
 }
 #endif

@@ -67,7 +67,7 @@ void MenuCanvas::draw() {
   host_button_->Draw();
   quit_button_->Draw();
   // logo
-  RenderUtil::DrawFont(&logo_font_, "Chess Tacos", getWidth() / 2 - logo_font_.getStringWidth("Chess Tacos") / 2, 150, 8);
+  RenderUtil::DrawFont(&logo_font_, "Pixel Chess", getWidth() / 2 - logo_font_.getStringWidth("Pixel Chess") / 2, 150, 8);
   RenderUtil::DrawFont(RenderUtil::font_, kVersion, 0, getHeight() - 10, 0, {1.0f, 1.0f, 1.0f, 0.8f});
   setColor(og_color);
   root_->DrawCursor();

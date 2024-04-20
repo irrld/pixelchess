@@ -4,12 +4,13 @@ set(GLIST_CXX_STANDARD 20)
 set(GLIST_CXX_STANDARD_REQUIRED True)
 
 ########## PROJECT NAME ##########
-set(APP_NAME ChessTacos)
+set(APP_NAME PixelChess)
 
 
 ########## USED PLUGINS LIST ##########
-set(PLUGINS)
-
+if(EMSCRIPTEN)
+set(PLUGINS gipWeb)
+endif()
 
 ##################################################
 # DO NOT CHANGE BELOW
@@ -21,48 +22,45 @@ if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
 endif()
 
 
-########## WINDOWS COMPILER PATH ##########
-# Clang compiler definition for Windows. Do not change this value for other OS.
-# For UNIX like systems, configure the compiler via OS commands.
-if(WIN32)
-    if(NOT DEFINED CMAKE_C_COMPILER)
-    	set(CMAKE_C_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang.exe")
-    endif()
-    if(NOT DEFINED CMAKE_CXX_COMPILER)
-    	set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang++.exe")
-    endif()
-endif(WIN32)
-
-
-########## MACOS ARCHITECTURE ##########
+########## ENGINE CONFIGURATION ##########
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE DEVICEARCHITECTURE )
 message( STATUS "Architecture: ${DEVICEARCHITECTURE}" )
 
 set(GLIST_CXX_FLAGS_RELEASE)
 set(GLIST_CXX_FLAGS_DEBUG)
 
-if(APPLE)
-if(NOT ${DEVICEARCHITECTURE} STREQUAL "arm64")
-    set(GLIST_CXX_FLAGS_RELEASE "-march=x86-64")
-    set(GLIST_CXX_FLAGS_DEBUG "-march=x86-64")
-    set(SYS_NAME "macos-x86_64")
-    set(SYS_PATH "/usr/local")
-    set(BREW_PATH "${SYS_PATH}/opt")
-    set(SYS_INC_PATH "${SYS_PATH}/include")
-    set(CMAKE_C_COMPILER "/usr/local/bin/clang")
-    set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
-    set(ENGINE_USE_SYMLINKS ON)
-else()
-    set(SYS_NAME "macos")
-    set(SYS_PATH "/opt/homebrew")
-    set(BREW_PATH "${SYS_PATH}/opt")
-    set(SYS_INC_PATH "${SYS_PATH}/include")
-    set(CMAKE_C_COMPILER "${BREW_PATH}/llvm/bin/clang")
-    set(CMAKE_CXX_COMPILER "${BREW_PATH}/llvm/bin/clang++")
-    set(ENGINE_USE_SYMLINKS ON)
-endif()
-endif(APPLE)
+# Clang compiler definition for Windows. Do not change this value for other OS.
+# For UNIX like systems, configure the compiler via OS commands.
+if(WIN32 AND NOT DEFINED EMSCRIPTEN)
+    if(NOT DEFINED CMAKE_C_COMPILER)
+        set(CMAKE_C_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang.exe")
+    endif()
+    if(NOT DEFINED CMAKE_CXX_COMPILER)
+        set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/../../zbin/glistzbin-win64/clang64/bin/clang++.exe")
+    endif()
+endif(WIN32)
 
+if(APPLE AND NOT DEFINED EMSCRIPTEN)
+    if(NOT ${DEVICEARCHITECTURE} STREQUAL "arm64")
+        set(GLIST_CXX_FLAGS_RELEASE "-march=x86-64")
+        set(GLIST_CXX_FLAGS_DEBUG "-march=x86-64")
+        set(SYS_NAME "macos-x86_64")
+        set(SYS_PATH "/usr/local")
+        set(BREW_PATH "${SYS_PATH}/opt")
+        set(SYS_INC_PATH "${SYS_PATH}/include")
+        set(CMAKE_C_COMPILER "/usr/local/bin/clang")
+        set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
+        set(ENGINE_USE_SYMLINKS ON)
+    else()
+        set(SYS_NAME "macos")
+        set(SYS_PATH "/opt/homebrew")
+        set(BREW_PATH "${SYS_PATH}/opt")
+        set(SYS_INC_PATH "${SYS_PATH}/include")
+        set(CMAKE_C_COMPILER "${BREW_PATH}/llvm/bin/clang")
+        set(CMAKE_CXX_COMPILER "${BREW_PATH}/llvm/bin/clang++")
+        set(ENGINE_USE_SYMLINKS ON)
+    endif()
+endif(APPLE)
 
 ########## PATHS AND VARIABLES ##########
 set(APP_DIR ${CMAKE_SOURCE_DIR})
