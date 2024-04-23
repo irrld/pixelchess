@@ -43,7 +43,12 @@ void MenuCanvas::update() {
   quit_button_->Update();
   if (host_button_->GetState() == ButtonState::Pressed) {
     host_button_->Lock();
-    root_->setCurrentCanvas(new TaskCanvas(root_, CreateRef<HostTask>(root_)));
+    auto task = CreateRef<HostTask>(root_);
+    if (task->is_failed()) {
+      root_->setCurrentCanvas(new MessageCanvas(root_, task->fail_reason()));
+      return;
+    }
+    root_->setCurrentCanvas(new TaskCanvas(root_, task));
   } else if (join_button_->GetState() == ButtonState::Pressed) {
     join_button_->Lock();
     root_->setCurrentCanvas(new JoinCanvas(root_));

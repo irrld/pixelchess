@@ -12,7 +12,7 @@ TaskCanvas::~TaskCanvas() {
 void TaskCanvas::setup() {
   loading_anim = 0;
   if (task) {
-    title = task->GetTitle();
+    title = task->title();
   } else {
     title = "";
   }
@@ -23,7 +23,7 @@ void TaskCanvas::setup() {
 
 void TaskCanvas::update() {
   if (task) {
-    title = task->GetTitle();
+    title = task->title();
   } else {
     title = "";
   }

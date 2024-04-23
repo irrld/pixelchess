@@ -85,6 +85,10 @@ void ChessConnectionLocal::Close() {
   server_->Stop();
 }
 
+void ChessConnectionLocal::Wait() {
+  server_->Wait();
+}
+
 void ChessConnectionLocal::SwitchTurn() {
   current_turn_ = current_turn_ == kPieceColorWhite ? kPieceColorBlack : kPieceColorWhite;
   auto turn_pk = CreateRef<SetTurnPacket>();
@@ -149,18 +153,18 @@ bool ChessConnectionLocal::OnClientConnect(znet::ServerClientConnectedEvent& eve
 }
 
 bool ChessConnectionLocal::OnClientDisconnect(znet::ServerClientDisconnectedEvent& event) {
-  on_opponent_disconnect_();
+  on_disconnect_(true); // is_opponent = true
   return false;
 }
 
-bool ChessConnectionLocal::OnBoardRequestPacket(znet::ConnectionSession&, Ref<BoardRequestPacket> packet) {
+bool ChessConnectionLocal::OnBoardRequestPacket(znet::PeerSession&, Ref<BoardRequestPacket> packet) {
   auto pk = CreateRef<UpdateBoardPacket>();
   pk->board_ = board_data_;
   opponent_session_->SendPacket(pk);
   return true;
 }
 
-bool ChessConnectionLocal::OnClientReadyPacket(znet::ConnectionSession&, Ref<ClientReadyPacket> packet) {
+bool ChessConnectionLocal::OnClientReadyPacket(znet::PeerSession&, Ref<ClientReadyPacket> packet) {
   received_ready = true;
   if (is_ready) {
     StartGame();
@@ -168,18 +172,18 @@ bool ChessConnectionLocal::OnClientReadyPacket(znet::ConnectionSession&, Ref<Cli
   return false;
 }
 
-bool ChessConnectionLocal::OnEndGamePacket(znet::ConnectionSession&, Ref<EndGamePacket> packet) {
+bool ChessConnectionLocal::OnEndGamePacket(znet::PeerSession&, Ref<EndGamePacket> packet) {
   on_end_game_(packet->winner_);
   return true;
 }
 
-bool ChessConnectionLocal::OnMovePacket(znet::ConnectionSession&, Ref<MovePacket> packet) {
+bool ChessConnectionLocal::OnMovePacket(znet::PeerSession&, Ref<MovePacket> packet) {
   on_move_(packet->x_, packet->y_, packet->to_x_, packet->to_y_);
   SwitchTurn();
   return true;
 }
 
-bool ChessConnectionLocal::OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet) {
+bool ChessConnectionLocal::OnSetPiecePacket(znet::PeerSession&, Ref<SetPiecePacket> packet) {
   on_piece_change_(packet->x_, packet->y_, packet->type_, packet->color_);
   return true;
 }
@@ -233,6 +237,10 @@ void ChessConnectionNetwork::Close() {
   client_->Disconnect();
 }
 
+void ChessConnectionNetwork::Wait() {
+  client_->Wait();
+}
+
 void ChessConnectionNetwork::EndGame(PieceColor winner) {
   auto pk = CreateRef<EndGamePacket>();
   pk->winner_ = winner;
@@ -243,6 +251,7 @@ void ChessConnectionNetwork::EndGame(PieceColor winner) {
 void ChessConnectionNetwork::OnEvent(znet::Event& event) {
   znet::EventDispatcher dispatcher{event};
   dispatcher.Dispatch<znet::ClientConnectedToServerEvent>(ZNET_BIND_FN(OnClientConnectedToServerEvent));
+  dispatcher.Dispatch<znet::ClientDisconnectedFromServerEvent>(ZNET_BIND_FN(OnClientDisconnectedFromServerEvent));
 }
 
 bool ChessConnectionNetwork::OnClientConnectedToServerEvent(znet::ClientConnectedToServerEvent& event) {
@@ -276,34 +285,41 @@ bool ChessConnectionNetwork::OnClientConnectedToServerEvent(znet::ClientConnecte
   return false;
 }
 
-bool ChessConnectionNetwork::OnMovePacket(znet::ConnectionSession&, Ref<MovePacket> packet) {
+bool ChessConnectionNetwork::OnClientDisconnectedFromServerEvent(znet::ClientDisconnectedFromServerEvent& event) {
+  on_disconnect_(false); // is_opponent = false
+  // todo implement a packet which is sent when the server shuts down
+  // so we know who disconnected
+  return false;
+}
+
+bool ChessConnectionNetwork::OnMovePacket(znet::PeerSession&, Ref<MovePacket> packet) {
   on_move_(packet->x_, packet->y_, packet->to_x_, packet->to_y_);
   return true;
 }
 
-bool ChessConnectionNetwork::OnUpdateBoardPacket(znet::ConnectionSession&, Ref<UpdateBoardPacket> packet) {
+bool ChessConnectionNetwork::OnUpdateBoardPacket(znet::PeerSession&, Ref<UpdateBoardPacket> packet) {
   board_data_ = packet->board_;
   // todo board changed event
   return true;
 }
 
-bool ChessConnectionNetwork::OnSetTurnPacket(znet::ConnectionSession&, Ref<SetTurnPacket> packet) {
+bool ChessConnectionNetwork::OnSetTurnPacket(znet::PeerSession&, Ref<SetTurnPacket> packet) {
   current_turn_ = packet->color_;
   on_turn_change_(current_turn_);
   return true;
 }
 
-bool ChessConnectionNetwork::OnStartGamePacket(znet::ConnectionSession&, Ref<StartGamePacket> packet) {
+bool ChessConnectionNetwork::OnStartGamePacket(znet::PeerSession&, Ref<StartGamePacket> packet) {
   on_start_game_();
   return true;
 }
 
-bool ChessConnectionNetwork::OnEndGamePacket(znet::ConnectionSession&, Ref<EndGamePacket> packet) {
+bool ChessConnectionNetwork::OnEndGamePacket(znet::PeerSession&, Ref<EndGamePacket> packet) {
   on_end_game_(packet->winner_);
   return true;
 }
 
-bool ChessConnectionNetwork::OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet) {
+bool ChessConnectionNetwork::OnSetPiecePacket(znet::PeerSession&, Ref<SetPiecePacket> packet) {
   on_piece_change_(packet->x_, packet->y_, packet->type_, packet->color_);
   return true;
 }

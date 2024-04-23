@@ -12,7 +12,7 @@
 
 class GameCanvas : public gBaseCanvas {
  public:
-  GameCanvas(gApp* root, Ref<ChessConnection> connection, Ref<std::thread> thread);
+  GameCanvas(gApp* root, Ref<ChessConnection> connection);
   virtual ~GameCanvas();
 
   void setup();
@@ -78,7 +78,6 @@ class GameCanvas : public gBaseCanvas {
   std::string info_text_;
   int info_pos_x_, info_pos_y_;
   Ref<ChessConnection> connection_;
-  Ref<std::thread> thread_;
   std::string next_info_text_;
   bool has_next_text_ = false;
   bool flip_board_;

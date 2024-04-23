@@ -79,7 +79,6 @@ else()
 	include(${ENGINE_DIR}/CMakeLists.txt)
 endif()
 
-add_subdirectory(znet/vendor/fmt)
 add_subdirectory(znet/znet)
 
 

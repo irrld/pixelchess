@@ -1,12 +1,12 @@
 #include "message_canvas.h"
 #include "menu_canvas.h"
 
-MessageCanvas::MessageCanvas(gApp* root, std::string message) : gBaseCanvas(root), message(message) {
+MessageCanvas::MessageCanvas(gApp* root, const std::string& message)
+    : gBaseCanvas(root), message(std::move(message)) {
   this->root = root;
 }
 
-MessageCanvas::~MessageCanvas() {
-}
+MessageCanvas::~MessageCanvas() {}
 
 void MessageCanvas::setup() {
   int buttons_x = getWidth() / 2;

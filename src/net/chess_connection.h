@@ -11,6 +11,7 @@ class ChessConnection {
   using MoveFunction = std::function<void(int, int, int, int)>;
   using TurnChangeFunction = std::function<void(PieceColor)>;
   using OnConnectFunction = std::function<void()>;
+  using OnDisconnectFunction = std::function<void(bool)>;
   using StartGameFunction = std::function<void()>;
   using EndGameFunction = std::function<void(PieceColor)>;
   using PieceChangeFunction = std::function<void(int, int, PieceType, PieceColor)>;
@@ -33,6 +34,8 @@ class ChessConnection {
 
   virtual void Close() = 0;
 
+  virtual void Wait() = 0;
+
   virtual void EndGame(PieceColor winner) = 0;
 
   void SetOnMove(MoveFunction on_move) {
@@ -45,6 +48,10 @@ class ChessConnection {
 
   void SetOnConnect(OnConnectFunction on_client_connect) {
     on_connect_ = std::move(on_client_connect);
+  }
+
+  void SetOnDisconnect(OnDisconnectFunction on_client_disconnect) {
+    on_disconnect_ = std::move(on_client_disconnect);
   }
 
   void SetOnStartGame(StartGameFunction on_start_game) {
@@ -62,6 +69,7 @@ class ChessConnection {
   TurnChangeFunction on_turn_change_;
   MoveFunction on_move_;
   OnConnectFunction on_connect_;
+  OnDisconnectFunction on_disconnect_;
   StartGameFunction on_start_game_;
   EndGameFunction on_end_game_;
   PieceChangeFunction on_piece_change_;
@@ -69,8 +77,6 @@ class ChessConnection {
 
 class ChessConnectionLocal : public ChessConnection {
  public:
-  using DisconnectFunction = std::function<void()>;
-
   ChessConnectionLocal(Ref<znet::Server> server);
   ~ChessConnectionLocal() override;
 
@@ -88,32 +94,29 @@ class ChessConnectionLocal : public ChessConnection {
 
   void Close() override;
 
+  void Wait() override;
+
   void EndGame(PieceColor winner) override;
 
   void SwitchTurn();
 
-  void SetOnOpponentDisconnect(DisconnectFunction on_disconnect) {
-    on_opponent_disconnect_ = std::move(on_disconnect);
-  }
-
  private:
   Ref<znet::Server> server_;
   bool accepting_connections_ = true;
-  Ref<znet::ServerSession> opponent_session_;
+  Ref<znet::PeerSession> opponent_session_;
   Ref<std::array<PieceData, 8 * 8>> board_data_;
   PieceColor current_turn_ = kPieceColorWhite;
-  DisconnectFunction on_opponent_disconnect_;
   bool is_ready = false, received_ready = false;
 
  private:
   void OnEvent(znet::Event& event);
   bool OnClientConnect(znet::ServerClientConnectedEvent& event);
   bool OnClientDisconnect(znet::ServerClientDisconnectedEvent& event);
-  bool OnMovePacket(znet::ConnectionSession&, Ref<MovePacket> packet);
-  bool OnBoardRequestPacket(znet::ConnectionSession&, Ref<BoardRequestPacket> packet);
-  bool OnClientReadyPacket(znet::ConnectionSession&, Ref<ClientReadyPacket> packet);
-  bool OnEndGamePacket(znet::ConnectionSession&, Ref<EndGamePacket> packet);
-  bool OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet);
+  bool OnMovePacket(znet::PeerSession&, Ref<MovePacket> packet);
+  bool OnBoardRequestPacket(znet::PeerSession&, Ref<BoardRequestPacket> packet);
+  bool OnClientReadyPacket(znet::PeerSession&, Ref<ClientReadyPacket> packet);
+  bool OnEndGamePacket(znet::PeerSession&, Ref<EndGamePacket> packet);
+  bool OnSetPiecePacket(znet::PeerSession&, Ref<SetPiecePacket> packet);
   void StartGame();
 };
 
@@ -136,23 +139,26 @@ class ChessConnectionNetwork : public ChessConnection {
 
   void Close() override;
 
+  void Wait() override;
+
   void EndGame(PieceColor winner) override;
 
  private:
   Ref<znet::Client> client_;
-  Ref<znet::ClientSession> opponent_session_;
+  Ref<znet::PeerSession> opponent_session_;
   Ref<std::array<PieceData, 8 * 8>> board_data_;
   PieceColor current_turn_ = kPieceColorNone;
 
  private:
   void OnEvent(znet::Event& event);
   bool OnClientConnectedToServerEvent(znet::ClientConnectedToServerEvent& event);
-  bool OnMovePacket(znet::ConnectionSession&, Ref<MovePacket> packet);
-  bool OnUpdateBoardPacket(znet::ConnectionSession&, Ref<UpdateBoardPacket> packet);
-  bool OnSetTurnPacket(znet::ConnectionSession&, Ref<SetTurnPacket> packet);
-  bool OnStartGamePacket(znet::ConnectionSession&, Ref<StartGamePacket> packet);
-  bool OnEndGamePacket(znet::ConnectionSession&, Ref<EndGamePacket> packet);
-  bool OnSetPiecePacket(znet::ConnectionSession&, Ref<SetPiecePacket> packet);
+  bool OnClientDisconnectedFromServerEvent(znet::ClientDisconnectedFromServerEvent& event);
+  bool OnMovePacket(znet::PeerSession&, Ref<MovePacket> packet);
+  bool OnUpdateBoardPacket(znet::PeerSession&, Ref<UpdateBoardPacket> packet);
+  bool OnSetTurnPacket(znet::PeerSession&, Ref<SetTurnPacket> packet);
+  bool OnStartGamePacket(znet::PeerSession&, Ref<StartGamePacket> packet);
+  bool OnEndGamePacket(znet::PeerSession&, Ref<EndGamePacket> packet);
+  bool OnSetPiecePacket(znet::PeerSession&, Ref<SetPiecePacket> packet);
 };
 
 class ChessConnectionDummy : public ChessConnection {

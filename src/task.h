@@ -12,7 +12,16 @@ class Task {
   virtual bool CanStop() = 0;
   virtual void Stop() = 0;
   virtual Ref<Task> Next() = 0;
-  virtual const std::string& GetTitle() = 0;
+
+  virtual const std::string& title() = 0;
+
+  bool is_failed() { return is_failed_; }
+
+  const std::string& fail_reason() { return fail_reason_; }
+
+ protected:
+  bool is_failed_ = false;
+  std::string fail_reason_ = "";
 };
 
 class HostTask : public Task {
@@ -24,13 +33,13 @@ class HostTask : public Task {
   void Stop() override;
   Ref<Task> Next() override;
 
-  const std::string& GetTitle() override;
+  const std::string& title() override { return title_; }
+
  private:
   void Cleanup();
   std::string title_;
   gApp* root_;
   Ref<znet::Server> server_;
-  Ref<std::thread> thread_;
   bool completed_ = false;
   bool was_completed_ = false;
   Ref<ChessConnectionLocal> connection_;
@@ -45,7 +54,7 @@ class JoinTask : public Task {
   void Stop() override;
   Ref<Task> Next() override;
 
-  const std::string& GetTitle() override;
+  const std::string& title() override { return title_; }
  private:
   void Cleanup();
   std::string title_;
@@ -53,7 +62,6 @@ class JoinTask : public Task {
   int port_;
   gApp* root_;
   Ref<znet::Client> client_;
-  Ref<std::thread> thread_;
   bool completed_ = false;
   bool was_completed_ = false;
   Ref<ChessConnectionNetwork> connection_;

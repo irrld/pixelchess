@@ -10,7 +10,7 @@
 
 class MessageCanvas : public gBaseCanvas {
  public:
-  MessageCanvas(gApp* root, std::string message);
+  MessageCanvas(gApp* root, const std::string& message);
   virtual ~MessageCanvas();
 
   void setup();

@@ -2,15 +2,13 @@
 #include <color.h>
 #include "message_canvas.h"
 
-GameCanvas::GameCanvas(gApp* root, Ref<ChessConnection> connection, Ref<std::thread> thread) : gBaseCanvas(root), root_(root), connection_(connection), thread_(thread) {
+GameCanvas::GameCanvas(gApp* root, Ref<ChessConnection> connection) : gBaseCanvas(root), root_(root), connection_(connection) {
   this->root_ = root;
 }
 
 GameCanvas::~GameCanvas() {
   connection_->Close();
-  if (thread_ && thread_->joinable()) {
-    thread_->join();
-  }
+  connection_->Wait();
 }
 
 void GameCanvas::setup() {
@@ -62,7 +60,7 @@ void GameCanvas::setup() {
     }
     auto state = chess_board_->CheckState(color);
     if (state == ChessState::Checkmate) {
-      connection_->EndGame(color);
+      connection_->EndGame(GetOppositeColor(color));
       return;
     } else if (state == ChessState::Stalemate) {
       connection_->EndGame(kPieceColorNone);
@@ -75,6 +73,7 @@ void GameCanvas::setup() {
     }
   });
   connection_->SetOnStartGame([this]() {
+    ZNET_LOG_INFO("Start!");
     game_started_ = true;
     input_lock_ = false;
   });
@@ -93,6 +92,7 @@ void GameCanvas::setup() {
   connection_->SetOnPieceChance([this](int x, int y, PieceType type, PieceColor color) {
     chess_board_->SetPiece(x, y, type, color);
   });
+  ZNET_LOG_INFO("GameCanvas setup done!");
   connection_->Ready();
 }
 
