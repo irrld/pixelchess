@@ -74,13 +74,13 @@ ChessState ChessBoard::CheckState(PieceColor current_turn) {
   if (current_turn == kPieceColorNone) {
     return ChessState::Playing;
   }
-  for (int x = 0; x < 8; ++x) {
-    for (int y = 0; y < 8; ++y) {
+  for (int x = 0; x < 8; x++) {
+    for (int y = 0; y < 8; y++) {
       Ref<Piece> piece = GetPiece(x, y);
       if (piece == nullptr) {
         continue;
       }
-      if (piece->GetType() == kPieceTypeKing && piece->GetColor() != current_turn) {
+      if (piece->GetType() == kPieceTypeKing && piece->GetColor() == current_turn) {
         if (HasAnyValidMoveTo(x, y, piece->GetColor())) {
           return ChessState::Checkmate;
         }
