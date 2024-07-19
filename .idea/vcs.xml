@@ -3,9 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../GlistEngine" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../glistplugins/gipWeb" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../glistplugins/gipWeb/deps/assimp" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../glistplugins/gipWeb/deps/freetype" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/znet" vcs="Git" />
   </component>
 </project>

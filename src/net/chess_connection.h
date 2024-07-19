@@ -160,34 +160,3 @@ class ChessConnectionNetwork : public ChessConnection {
   bool OnEndGamePacket(znet::PeerSession&, Ref<EndGamePacket> packet);
   bool OnSetPiecePacket(znet::PeerSession&, Ref<SetPiecePacket> packet);
 };
-
-class ChessConnectionDummy : public ChessConnection {
- public:
-  ChessConnectionDummy();
-  ~ChessConnectionDummy() override = default;
-
-  void Move(int x, int y, int to_x, int to_y, bool switch_turn) override {}
-  void Promote(int x, int y, PieceType piece_type, PieceColor piece_color) override;
-  bool IsOpen() override { return false; }
-
-  Ref<std::array<PieceData, 8 * 8>> GetBoardData() override { return board_data_; }
-
-  PieceColor GetCurrentTurn() override { return current_turn_; }
-
-  void Ready() override {
-    on_start_game_();
-    current_turn_ = kPieceColorBlack;
-    on_turn_change_(kPieceColorBlack);
-  }
-
-  void Close() override {
-
-  }
-
-  void EndGame(PieceColor winner) override {
-    on_end_game_(winner);
-  }
- private:
-  PieceColor current_turn_ = kPieceColorNone;
-  Ref<std::array<PieceData, 8 * 8>> board_data_;
-};

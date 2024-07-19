@@ -255,8 +255,8 @@ void ChessConnectionNetwork::OnEvent(znet::Event& event) {
 }
 
 bool ChessConnectionNetwork::OnClientConnectedToServerEvent(znet::ClientConnectedToServerEvent& event) {
-  auto session = event.session();
-  auto& layer = session->handler_layer();
+  Ref<znet::PeerSession> session = event.session();
+  znet::HandlerLayer& layer = session->handler_layer();
   auto update_board_handler = CreateRef<znet::PacketHandler<UpdateBoardPacket, UpdateBoardPacketSerializerV1>>();
   update_board_handler->AddReceiveCallback(ZNET_BIND_FN(OnUpdateBoardPacket));
   layer.AddPacketHandler(update_board_handler);
@@ -322,37 +322,4 @@ bool ChessConnectionNetwork::OnEndGamePacket(znet::PeerSession&, Ref<EndGamePack
 bool ChessConnectionNetwork::OnSetPiecePacket(znet::PeerSession&, Ref<SetPiecePacket> packet) {
   on_piece_change_(packet->x_, packet->y_, packet->type_, packet->color_);
   return true;
-}
-
-ChessConnectionDummy::ChessConnectionDummy() {
-  board_data_ = CreateRef<std::array<PieceData, 8 * 8>>();
-  std::array<PieceData, 8 * 8>& board_data = *board_data_.get();
-  for (int x = 0; x < 8; ++x) {
-    board_data[ChessBoard::PosToIndex(x, 1)] = {true, kPieceTypePawn, kPieceColorWhite};
-    board_data[ChessBoard::PosToIndex(x, 6)] = {true, kPieceTypePawn, kPieceColorBlack};
-  }
-  board_data[ChessBoard::PosToIndex(0, 0)] = {true, kPieceTypeRook, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(7, 0)] = {true, kPieceTypeRook, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(0, 7)] = {true, kPieceTypeRook, kPieceColorBlack};
-  board_data[ChessBoard::PosToIndex(7, 7)] = {true, kPieceTypeRook, kPieceColorBlack};
-
-  board_data[ChessBoard::PosToIndex(1, 0)] = {true, kPieceTypeKnight, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(6, 0)] = {true, kPieceTypeKnight, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(1, 7)] = {true, kPieceTypeKnight, kPieceColorBlack};
-  board_data[ChessBoard::PosToIndex(6, 7)] = {true, kPieceTypeKnight, kPieceColorBlack};
-
-  board_data[ChessBoard::PosToIndex(2, 0)] = {true, kPieceTypeBishop, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(5, 0)] = {true, kPieceTypeBishop, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(2, 7)] = {true, kPieceTypeBishop, kPieceColorBlack};
-  board_data[ChessBoard::PosToIndex(5, 7)] = {true, kPieceTypeBishop, kPieceColorBlack};
-
-  board_data[ChessBoard::PosToIndex(4, 0)] = {true, kPieceTypeKing, kPieceColorWhite};
-  board_data[ChessBoard::PosToIndex(3, 0)] = {true, kPieceTypeQueen, kPieceColorWhite};
-
-  board_data[ChessBoard::PosToIndex(4, 7)] = {true, kPieceTypeKing, kPieceColorBlack};
-  board_data[ChessBoard::PosToIndex(3, 7)] = {true, kPieceTypeQueen, kPieceColorBlack};
-}
-
-void ChessConnectionDummy::Promote(int x, int y, PieceType piece_type, PieceColor piece_color) {
-  on_piece_change_(x, y, piece_type, piece_color);
 }

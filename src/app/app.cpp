@@ -24,7 +24,6 @@ void gApp::setup() {
   cursor_->setFiltering(2, 2);
   cursor_height_ = cursor_->getHeight();
   cursor_width_ = 16;
-  //auto* cnv = new GameCanvas(this, CreateRef<ChessConnectionDummy>(), nullptr);
   auto* cnv = new LoadingCanvas(this);
   appmanager->setCurrentCanvas(cnv);
   appmanager->getWindow()->setCursorMode(0x00034002); // GLFW_CURSOR_HIDDEN
